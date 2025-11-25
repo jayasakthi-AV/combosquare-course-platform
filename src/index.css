@@ -1,5 +1,38 @@
 @import "tailwindcss";
 
 
+details[open] .arrow-icon {
+    transform: rotate(180deg);
+  }
 
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+  
+  .animate-float {
+    animation: float 4s ease-in-out infinite;
+  }
+  
+  @keyframes rotate-slow {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  
+  .rotate-slow {
+    animation: rotate-slow 16s linear infinite;
+  }
+  
+  .rotate-slow-reverse {
+    animation: rotate-slow 16s linear infinite reverse;
+  }
+
+  .flex-\[4\] {
+    flex: 4;
+  }
+  
+  .flex-\[1\.2\] {
+    flex: 1.2;
+  }
+  
 
