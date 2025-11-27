@@ -35,4 +35,12 @@ details[open] .arrow-icon {
     flex: 1.2;
   }
   
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
 

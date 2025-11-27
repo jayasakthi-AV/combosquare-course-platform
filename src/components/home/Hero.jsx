@@ -42,7 +42,7 @@ export default function Hero() {
   return (
     <>
       {/* 🌟 HERO SECTION */}
-      <section className="w-full pt-20 md:pt-32 pb-14 md:pb-20 bg-gradient-to-br from-purple-50 to-white">
+      <section className="w-full pt-20 md:pt-32 pb-4 md:pb-6 bg-gradient-to-br from-purple-50 to-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col md:flex-row items-center md:items-start gap-10 md:gap-14">
 
           {/* ⭐ LEFT SIDE CONTENT */}
@@ -132,7 +132,7 @@ order-1 md:order-2 w-full">
       </section>
 
       {/* ⭐ TOP COMPANIES BELOW HERO */}
-<div className="w-full bg-white pt-4 pb-100">
+<div className="w-full bg-white pt-8 ">
   <div className="max-w-7xl mx-auto px-6 text-center">
 
     <p className="text-gray-900 font-extrabold text-2xl mb-4">
