@@ -34,7 +34,7 @@ export default function CareerTracks() {
   ];
 
   return (
-    <div className="w-full py-14 bg-gradient-to-b from-white to-purple-50/20 pt-1">
+    <div className="w-full py-14 bg-gradient-to-b from-white to-purple-50/20 ">
       <div className="max-w-7xl mx-auto px-6">
 
         {/* ⭐Heading */}

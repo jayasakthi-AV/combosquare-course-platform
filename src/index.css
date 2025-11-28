@@ -43,4 +43,56 @@ details[open] .arrow-icon {
     scrollbar-width: none;
   }
   
+ /* --- FAQ Animated Background (working version) --- */
 
+.faq-bg {
+  position: relative;
+  overflow: hidden;
+  background: transparent;
+}
+
+.faq-bg::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(90deg, rgba(139, 92, 246, 0.10) 1px, transparent 1px),
+    linear-gradient(rgba(139, 92, 246, 0.10) 1px, transparent 1px);
+  background-size: 80px 80px;
+  animation: faqGridMove 18s linear infinite;
+  z-index: 0 !important;
+}
+
+@keyframes faqGridMove {
+  0% {
+    transform: translateY(0px);
+  }
+  100% {
+    transform: translateY(-120px);
+  }
+}
+
+.faq-bg::after {
+  content: "";
+  position: absolute;
+  width: 140%;
+  height: 140%;
+  top: -20%;
+  left: -20%;
+  background: radial-gradient(
+    circle,
+    rgba(139, 92, 246, 0.15) 0%,
+    rgba(139, 92, 246, 0) 60%
+  );
+  animation: faqGlow 6s ease-in-out infinite alternate;
+  z-index: 0 !important;
+}
+
+@keyframes faqGlow {
+  from {
+    transform: scale(1) translate(0px, 0px);
+  }
+  to {
+    transform: scale(1.05) translate(20px, 20px);
+  }
+}
