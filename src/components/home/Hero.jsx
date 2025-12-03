@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 import user1 from "../../assets/user1.png";
 import user2 from "../../assets/user2.png";
@@ -14,6 +15,9 @@ import tcs from "../../assets/tcs.png";
 import infosys from "../../assets/infosys.png";
 
 export default function Hero() {
+
+  const navigate = useNavigate();
+
   const sliderImages = [
     { img: user1, title: "Learn From Experts", desc: "Master development with structured guidance." },
     { img: user2, title: "Hands-on Projects", desc: "Build real-world projects for your portfolio." },
@@ -79,10 +83,17 @@ export default function Hero() {
 
             {/* CTA BUTTONS */}
             <div className="flex flex-wrap justify-center md:justify-start gap-3 pt-3">
-              <button className="px-5 sm:px-6 py-3 bg-purple-600 text-white rounded-full font-semibold shadow-lg hover:bg-purple-700 transition">
+              <button
+                onClick={() => navigate("/program")}
+                className="px-5 sm:px-6 py-3 bg-purple-600 text-white rounded-full font-semibold shadow-lg hover:bg-purple-700 transition"
+              >
                 Start Learning Now
               </button>
-              <button className="px-5 sm:px-6 py-3 border border-purple-600 text-purple-600 rounded-full font-semibold hover:bg-purple-100 transition">
+
+              <button
+                onClick={() => navigate("/contact")}
+                className="px-5 sm:px-6 py-3 border border-purple-600 text-purple-600 rounded-full font-semibold hover:bg-purple-100 transition"
+              >
                 Talk to a Career Expert
               </button>
             </div>
@@ -104,7 +115,6 @@ export default function Hero() {
           {/* ⭐ RIGHT SIDE SLIDER */}
           <div className="flex-1 flex justify-center items-center gap-3 h-[240px] sm:h-[300px] md:h-[350px] mt-4 md:mt-10 
 order-1 md:order-2 w-full">
-
 
             {sliderImages.map((item, i) => (
               <div
@@ -132,33 +142,39 @@ order-1 md:order-2 w-full">
       </section>
 
       {/* ⭐ TOP COMPANIES BELOW HERO */}
-<div className="w-full bg-white pt-8 ">
-  <div className="max-w-7xl mx-auto px-6 text-center">
+      <div className="w-full bg-white pt-8 ">
+        <div className="max-w-7xl mx-auto px-6 text-center">
 
-    <p className="text-gray-900 font-extrabold text-2xl mb-4">
-      Where Do Our Learners Work?
-    </p>
+          <p className="text-gray-900 font-extrabold text-2xl mb-4">
+            Where Do Our Learners Work?
+          </p>
 
-    <div className="flex items-center justify-center gap-5 sm:gap-8 flex-wrap opacity-90">
+          <div className="flex items-center justify-center gap-5 sm:gap-8 flex-wrap opacity-90">
 
-      <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/google/google-original.svg"
-        alt="Google" className="h-8 sm:h-15 object-contain" />
+            <img
+              src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/google/google-original.svg"
+              alt="Google"
+              className="h-8 sm:h-15 object-contain"
+            />
 
-      <img src={amazon} alt="Amazon" className="h-8 sm:h-15 object-contain" />
+            <img src={amazon} alt="Amazon" className="h-8 sm:h-15 object-contain" />
 
-      <img src={zoho} alt="Zoho" className="h-7 sm:h-15 object-contain" />
+            <img src={zoho} alt="Zoho" className="h-7 sm:h-15 object-contain" />
 
-      <img src={tcs} alt="TCS" className="h-7 sm:h-15 object-contain" />
+            <img src={tcs} alt="TCS" className="h-7 sm:h-15 object-contain" />
 
-      <img src={infosys} alt="Infosys" className="h-7 sm:h-15 object-contain" />
+            <img src={infosys} alt="Infosys" className="h-7 sm:h-15 object-contain" />
 
-      <img src="https://cdn.worldvectorlogo.com/logos/accenture-5.svg"
-        alt="Accenture" className="h-7 sm:h-10 object-contain" />
+            <img
+              src="https://cdn.worldvectorlogo.com/logos/accenture-5.svg"
+              alt="Accenture"
+              className="h-7 sm:h-10 object-contain"
+            />
 
-    </div>
+          </div>
 
-  </div>
-</div>
+        </div>
+      </div>
 
     </>
   );

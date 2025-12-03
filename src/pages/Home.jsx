@@ -5,6 +5,11 @@ import StudentReview from "../components/home/StudentReview";
 import WhyChooseUs from "../components/home/WhyChooseUs";
 import Achievement from "../components/home/Achievement";
 import FAQ from "../components/home/FAQ";
+import FinalCTA from "../components/home/FinalCTA";
+import Footer from "../components/home/Footer";
+
+
+
 
 
 
@@ -18,6 +23,9 @@ export default function Home() {
       <WhyChooseUs />
       <Achievement /> 
       <FAQ />
+      <FinalCTA />
+      <Footer />
+
     </>
   );
 }
