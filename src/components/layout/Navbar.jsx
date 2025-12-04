@@ -139,7 +139,7 @@ export default function Navbar() {
 
       {/* MOBILE MENU */}
       {mobileOpen && (
-        <div className="md:hidden bg-purple-700 text-white shadow-xl border-t border-purple-500">
+        <div className="md:hidden bg-purple-900 text-white shadow-xl border-t border-purple-500">
           <div className="flex flex-col p-5 space-y-4 font-semibold">
 
             {/* HOME */}
