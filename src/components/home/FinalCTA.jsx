@@ -6,7 +6,7 @@ export default function FinalCTA() {
   const navigate = useNavigate();
 
   return (
-    <section className="w-full bg-gradient-to-r from-purple-700 via-indigo-700 to-purple-800 py-16 md:py-20">
+    <section className="w-full bg-gradient-to-r from-purple-900 via-indigo-900 to-purple-900 py-16 md:py-20">
       <div className="max-w-6xl mx-auto px-4 md:px-6">
         <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl px-6 py-8 md:px-10 md:py-12 shadow-[0_18px_60px_rgba(0,0,0,0.25)]">
           
