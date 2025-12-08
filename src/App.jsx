@@ -8,8 +8,10 @@ import Contact from "./pages/Contact";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 
-// ⭐ IMPORTANT: IMPORT DOMAINPAGE
 import DomainPage from "./pages/DomainPage";
+import ProgramPage from "./pages/ProgramPage";
+import CareerPage from "./pages/CareerPage";
+
 
 export default function App() {
   const location = useLocation();
@@ -26,10 +28,15 @@ export default function App() {
           {/* HOME */}
           <Route path="/" element={<Home />} />
 
-          {/* ⭐ DYNAMIC DOMAIN PAGE */}
+          {/* DOMAINS */}
           <Route path="/domains/:domainId" element={<DomainPage />} />
 
-          {/* OTHER STATIC PAGES */}
+          {/* ⭐ FIXED PROGRAM ROUTE */}
+          <Route path="/program/:programId" element={<ProgramPage />} />
+          <Route path="/careers/:careerId" element={<CareerPage />} />
+
+
+          {/* STATIC PAGES */}
           <Route path="/programs" element={<Programs />} />
           <Route path="/careers" element={<Careers />} />
           <Route path="/contact" element={<Contact />} />
