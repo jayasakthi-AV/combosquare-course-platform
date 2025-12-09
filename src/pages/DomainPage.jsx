@@ -1,5 +1,6 @@
 import { useParams } from "react-router-dom";
-import { domainData } from "../data/domainData";
+import { domainData } from "../data/domainData.js";
+
 import { CheckCircle, Sparkles } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import Footer from "../components/home/Footer";
