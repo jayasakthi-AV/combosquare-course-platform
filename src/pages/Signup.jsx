@@ -41,9 +41,10 @@ export default function Signup() {
         formData.password,
         formData.mobile || null
       );
-      
       console.log("Signup successful:", response.user);
-      navigate("/");
+      
+      // New users are always students
+      navigate("/dashboard");
       
     } catch (err) {
       console.error("Signup error:", err);

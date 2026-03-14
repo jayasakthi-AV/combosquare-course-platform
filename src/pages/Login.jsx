@@ -29,7 +29,13 @@ export default function Login() {
     try {
       const response = await login(formData.email, formData.password);
       console.log("Login successful:", response.user);
-      navigate("/");
+      
+      // Redirect based on role
+      if (response.user.role === "admin") {
+        navigate("/admin");
+      } else {
+        navigate("/dashboard");
+      }
     } catch (err) {
       console.error("Login error:", err);
       const errorMessage = err.response?.data?.detail || "Login failed. Please try again.";

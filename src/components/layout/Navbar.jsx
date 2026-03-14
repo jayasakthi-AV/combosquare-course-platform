@@ -1,10 +1,38 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import Logo from "./Logo";
+import { isLoggedIn, getUser } from "../../services/api";
 
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState("");
+  const [loggedIn, setLoggedIn] = useState(false);
+  const [user, setUser] = useState(null);
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Check login status whenever route changes
+  useEffect(() => {
+    const status = isLoggedIn();
+    setLoggedIn(status);
+    setUser(status ? getUser() : null);
+  }, [location.pathname]);
+
+  const handleLogout = () => {
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("user");
+    setLoggedIn(false);
+    setUser(null);
+    navigate("/login");
+  };
+
+  const handleDashboard = () => {
+    if (user?.role === "admin") {
+      navigate("/admin");
+    } else {
+      navigate("/dashboard");
+    }
+  };
 
   return (
     <nav className="w-full fixed top-0 left-0 z-[9999] bg-purple-900 shadow-lg">
@@ -22,7 +50,6 @@ export default function Navbar() {
             className="relative group cursor-pointer px-3 py-1 rounded-full hover:bg-white hover:text-purple-700 transition-colors"
           >
             Home
-            
           </Link>
 
           {/* DOMAINS DROPDOWN */}
@@ -34,32 +61,17 @@ export default function Navbar() {
             <button className="relative px-3 py-1 rounded-full flex items-center gap-1 hover:bg-white hover:text-purple-700 transition-colors">
               Domains
               <span className="text-xs">{dropdownOpen === "domains" ? "▲" : "▼"}</span>
-              
             </button>
-
             <div className="absolute left-0 top-full h-4 w-full"></div>
-
-            <div
-              className="absolute left-0 top-full mt-4 w-64 bg-white shadow-lg rounded-lg py-3
-              opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto
-              transition-opacity duration-200 z-50 flex flex-col"
-            >
-              <Link to="/domains/technology" className="px-4 py-2 text-purple-700 hover:bg-purple-100">
-                Technology & IT
-              </Link>
-              <Link to="/domains/programming" className="px-4 py-2 text-purple-700 hover:bg-purple-100">
-                Programming Fundamentals
-              </Link>
-              <Link to="/domains/engineering" className="px-4 py-2 text-purple-700 hover:bg-purple-100">
-                Engineering & Automation
-              </Link>
-              <Link to="/domains/business" className="px-4 py-2 text-purple-700 hover:bg-purple-100">
-                Business & Creativity
-              </Link>
+            <div className="absolute left-0 top-full mt-4 w-64 bg-white shadow-lg rounded-lg py-3 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity duration-200 z-50 flex flex-col">
+              <Link to="/domains/technology" className="px-4 py-2 text-purple-700 hover:bg-purple-100">Technology & IT</Link>
+              <Link to="/domains/programming" className="px-4 py-2 text-purple-700 hover:bg-purple-100">Programming Fundamentals</Link>
+              <Link to="/domains/engineering" className="px-4 py-2 text-purple-700 hover:bg-purple-100">Engineering & Automation</Link>
+              <Link to="/domains/business" className="px-4 py-2 text-purple-700 hover:bg-purple-100">Business & Creativity</Link>
             </div>
           </div>
 
-          {/* PROGRAMS DROPDOWN — FIXED */}
+          {/* PROGRAMS DROPDOWN */}
           <div
             className="relative group z-50"
             onMouseEnter={() => setDropdownOpen("programs")}
@@ -68,70 +80,35 @@ export default function Navbar() {
             <button className="relative px-3 py-1 rounded-full flex items-center gap-1 hover:bg-white hover:text-purple-700 transition-colors">
               Programs
               <span className="text-xs">{dropdownOpen === "programs" ? "▲" : "▼"}</span>
-              
             </button>
-
             <div className="absolute left-0 top-full h-4 w-full"></div>
-
-            <div
-              className="absolute left-0 top-full mt-4 w-80 bg-white shadow-lg rounded-lg py-3
-              opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto
-              transition-opacity duration-200 z-50 flex flex-col"
-            >
-              <Link to="/program/full-stack" className="px-4 py-2 text-purple-700 hover:bg-purple-100">
-                Full Stack Developer Program
-              </Link>
-
-              <Link to="/program/ai-foundations" className="px-4 py-2 text-purple-700 hover:bg-purple-100">
-                AI Foundations
-              </Link>
-
-              <Link to="/program/data-science" className="px-4 py-2 text-purple-700 hover:bg-purple-100">
-                Data Science Starter
-              </Link>
-
-              <Link to="/program/ui-ux" className="px-4 py-2 text-purple-700 hover:bg-purple-100">
-                UI/UX Design Essentials
-              </Link>
+            <div className="absolute left-0 top-full mt-4 w-80 bg-white shadow-lg rounded-lg py-3 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity duration-200 z-50 flex flex-col">
+              <Link to="/program/full-stack" className="px-4 py-2 text-purple-700 hover:bg-purple-100">Full Stack Developer Program</Link>
+              <Link to="/program/ai-foundations" className="px-4 py-2 text-purple-700 hover:bg-purple-100">AI Foundations</Link>
+              <Link to="/program/data-science" className="px-4 py-2 text-purple-700 hover:bg-purple-100">Data Science Starter</Link>
+              <Link to="/program/ui-ux" className="px-4 py-2 text-purple-700 hover:bg-purple-100">UI/UX Design Essentials</Link>
             </div>
           </div>
 
-         {/* CAREERS */}
-<div
-  className="relative group z-50"
-  onMouseEnter={() => setDropdownOpen("careers")}
-  onMouseLeave={() => setDropdownOpen("")}
->
-  <button className="relative px-3 py-1 rounded-full flex items-center gap-1 hover:bg-white hover:text-purple-700 transition-colors">
-    Careers
-    <span className="text-xs">{dropdownOpen === "careers" ? "▲" : "▼"}</span>
-    
-  </button>
-
-  <div className="absolute left-0 top-full h-4 w-full"></div>
-
-  <div
-    className="absolute left-0 top-full mt-4 w-64 bg-white shadow-lg rounded-lg py-3
-    opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto
-    transition-opacity duration-200 z-50 flex flex-col"
-  >
-    <Link to="/careers/jobs" className="px-4 py-2 text-purple-700 hover:bg-purple-100 hover:text-purple-900">
-      Jobs
-    </Link>
-    <Link to="/careers/internships" className="px-4 py-2 text-purple-700 hover:bg-purple-100 hover:text-purple-900">
-      Internships
-    </Link>
-    <Link to="/careers/webinars" className="px-4 py-2 text-purple-700 hover:bg-purple-100 hover:text-purple-900">
-      Webinars
-    </Link>
-    <Link to="/careers/training" className="px-4 py-2 text-purple-700 hover:bg-purple-100 hover:text-purple-900">
-      Training
-    </Link>
-    <Link to="/careers/workshops" className="px-4 py-2 text-purple-700 hover:bg-purple-100 hover:text-purple-900">
-      Workshops
-    </Link>
-  </div>
-</div>
+          {/* CAREERS DROPDOWN */}
+          <div
+            className="relative group z-50"
+            onMouseEnter={() => setDropdownOpen("careers")}
+            onMouseLeave={() => setDropdownOpen("")}
+          >
+            <button className="relative px-3 py-1 rounded-full flex items-center gap-1 hover:bg-white hover:text-purple-700 transition-colors">
+              Careers
+              <span className="text-xs">{dropdownOpen === "careers" ? "▲" : "▼"}</span>
+            </button>
+            <div className="absolute left-0 top-full h-4 w-full"></div>
+            <div className="absolute left-0 top-full mt-4 w-64 bg-white shadow-lg rounded-lg py-3 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity duration-200 z-50 flex flex-col">
+              <Link to="/careers/jobs" className="px-4 py-2 text-purple-700 hover:bg-purple-100">Jobs</Link>
+              <Link to="/careers/internships" className="px-4 py-2 text-purple-700 hover:bg-purple-100">Internships</Link>
+              <Link to="/careers/webinars" className="px-4 py-2 text-purple-700 hover:bg-purple-100">Webinars</Link>
+              <Link to="/careers/training" className="px-4 py-2 text-purple-700 hover:bg-purple-100">Training</Link>
+              <Link to="/careers/workshops" className="px-4 py-2 text-purple-700 hover:bg-purple-100">Workshops</Link>
+            </div>
+          </div>
 
           {/* CONTACT */}
           <Link
@@ -139,18 +116,45 @@ export default function Navbar() {
             className="relative group px-3 py-1 rounded-full hover:bg-white hover:text-purple-700 transition-colors"
           >
             Contact
-            
           </Link>
         </div>
 
-        {/* DESKTOP BUTTONS */}
-        <div className="hidden md:flex space-x-4">
-          <Link to="/login" className="px-4 py-2 rounded-full border border-white text-white hover:bg-white hover:text-purple-700 transition-colors">
-            Login
-          </Link>
-          <Link to="/signup" className="px-5 py-2 rounded-full bg-white text-purple-700 font-semibold shadow-md hover:bg-gray-100 transition-colors">
-            Sign Up
-          </Link>
+        {/* DESKTOP BUTTONS — changes based on login state */}
+        <div className="hidden md:flex items-center space-x-4">
+          {loggedIn ? (
+            <>
+              <span className="text-purple-200 text-sm font-medium">
+                Hi, {user?.full_name?.split(" ")[0]}! 👋
+              </span>
+              <button
+                onClick={handleDashboard}
+                className="px-4 py-2 rounded-full bg-white text-purple-700 font-semibold shadow-md hover:bg-gray-100 transition-colors"
+              >
+                {user?.role === "admin" ? "Admin Panel" : "Dashboard"}
+              </button>
+              <button
+                onClick={handleLogout}
+                className="px-4 py-2 rounded-full border border-white text-white hover:bg-white hover:text-purple-700 transition-colors"
+              >
+                Logout
+              </button>
+            </>
+          ) : (
+            <>
+              <Link
+                to="/login"
+                className="px-4 py-2 rounded-full border border-white text-white hover:bg-white hover:text-purple-700 transition-colors"
+              >
+                Login
+              </Link>
+              <Link
+                to="/signup"
+                className="px-5 py-2 rounded-full bg-white text-purple-700 font-semibold shadow-md hover:bg-gray-100 transition-colors"
+              >
+                Sign Up
+              </Link>
+            </>
+          )}
         </div>
 
         {/* MOBILE MENU ICON */}
@@ -183,115 +187,61 @@ export default function Navbar() {
             </details>
 
             {/* PROGRAMS MOBILE */}
-            {/* PROGRAMS MOBILE */}
-<details className="w-full">
-  <summary className="cursor-pointer py-2 flex justify-between items-center">
-    Programs <span>▼</span>
-  </summary>
-
-  <div className="pl-4 mt-2 text-white/80 flex flex-col space-y-2">
-
-    <Link
-      to="/program/full-stack"
-      onClick={() => setMobileOpen(false)}
-      className="block py-2"
-    >
-      Full Stack Developer Program
-    </Link>
-
-    <Link
-      to="/program/ai-foundations"
-      onClick={() => setMobileOpen(false)}
-      className="block py-2"
-    >
-      AI Foundations
-    </Link>
-
-    <Link
-      to="/program/data-science"
-      onClick={() => setMobileOpen(false)}
-      className="block py-2"
-    >
-      Data Science Starter
-    </Link>
-
-    <Link
-      to="/program/ui-ux"
-      onClick={() => setMobileOpen(false)}
-      className="block py-2"
-    >
-      UI/UX Design Essentials
-    </Link>
-
-  </div>
-</details>
-
+            <details className="w-full">
+              <summary className="cursor-pointer py-2 flex justify-between items-center">
+                Programs <span>▼</span>
+              </summary>
+              <div className="pl-4 mt-2 text-white/80 flex flex-col space-y-2">
+                <Link to="/program/full-stack" onClick={() => setMobileOpen(false)} className="block py-2">Full Stack Developer Program</Link>
+                <Link to="/program/ai-foundations" onClick={() => setMobileOpen(false)} className="block py-2">AI Foundations</Link>
+                <Link to="/program/data-science" onClick={() => setMobileOpen(false)} className="block py-2">Data Science Starter</Link>
+                <Link to="/program/ui-ux" onClick={() => setMobileOpen(false)} className="block py-2">UI/UX Design Essentials</Link>
+              </div>
+            </details>
 
             {/* CAREERS MOBILE */}
-            {/* CAREERS MOBILE */}
-{/* CAREERS MOBILE */}
-<details className="w-full">
-  <summary className="cursor-pointer py-2 flex justify-between items-center">
-    Careers <span>▼</span>
-  </summary>
-
-  <div className="pl-4 mt-2 space-y-2 text-white/80">
-
-    <Link
-      to="/careers/jobs"
-      onClick={() => setMobileOpen(false)}
-      className="block py-2 pr-4 rounded hover:bg-white/10 transition"
-    >
-      Jobs
-    </Link>
-
-    <Link
-      to="/careers/internships"
-      onClick={() => setMobileOpen(false)}
-      className="block py-2 pr-4 rounded hover:bg-white/10 transition"
-    >
-      Internships
-    </Link>
-
-    <Link
-      to="/careers/webinars"
-      onClick={() => setMobileOpen(false)}
-      className="block py-2 pr-4 rounded hover:bg-white/10 transition"
-    >
-      Webinars
-    </Link>
-
-    <Link
-      to="/careers/training"
-      onClick={() => setMobileOpen(false)}
-      className="block py-2 pr-4 rounded hover:bg-white/10 transition"
-    >
-      Training
-    </Link>
-
-    <Link
-      to="/careers/workshops"
-      onClick={() => setMobileOpen(false)}
-      className="block py-2 pr-4 rounded hover:bg-white/10 transition"
-    >
-      Workshops
-    </Link>
-
-  </div>
-</details>
-
-
+            <details className="w-full">
+              <summary className="cursor-pointer py-2 flex justify-between items-center">
+                Careers <span>▼</span>
+              </summary>
+              <div className="pl-4 mt-2 space-y-2 text-white/80">
+                <Link to="/careers/jobs" onClick={() => setMobileOpen(false)} className="block py-2">Jobs</Link>
+                <Link to="/careers/internships" onClick={() => setMobileOpen(false)} className="block py-2">Internships</Link>
+                <Link to="/careers/webinars" onClick={() => setMobileOpen(false)} className="block py-2">Webinars</Link>
+                <Link to="/careers/training" onClick={() => setMobileOpen(false)} className="block py-2">Training</Link>
+                <Link to="/careers/workshops" onClick={() => setMobileOpen(false)} className="block py-2">Workshops</Link>
+              </div>
+            </details>
 
             <Link to="/contact" onClick={() => setMobileOpen(false)}>Contact</Link>
 
-            {/* MOBILE LOGIN/SIGNUP */}
+            {/* MOBILE AUTH BUTTONS */}
             <div className="flex flex-col gap-3 pt-3">
-              <Link to="/login" className="w-full py-2 border border-white rounded-full text-white text-center hover:bg-white hover:text-purple-700 transition-colors">
-                Login
-              </Link>
-              <Link to="/signup" className="w-full py-2 bg-white text-purple-700 rounded-full text-center hover:bg-gray-100 transition-colors">
-                Sign Up
-              </Link>
+              {loggedIn ? (
+                <>
+                  <button
+                    onClick={handleDashboard}
+                    className="w-full py-2 bg-white text-purple-700 rounded-full text-center font-semibold hover:bg-gray-100 transition-colors"
+                  >
+                    {user?.role === "admin" ? "Admin Panel" : "Dashboard"}
+                  </button>
+                  <button
+                    onClick={handleLogout}
+                    className="w-full py-2 border border-white text-white rounded-full text-center hover:bg-white hover:text-purple-700 transition-colors"
+                  >
+                    Logout
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link to="/login" className="w-full py-2 border border-white rounded-full text-white text-center hover:bg-white hover:text-purple-700 transition-colors">
+                    Login
+                  </Link>
+                  <Link to="/signup" className="w-full py-2 bg-white text-purple-700 rounded-full text-center hover:bg-gray-100 transition-colors">
+                    Sign Up
+                  </Link>
+                </>
+              )}
             </div>
 
           </div>

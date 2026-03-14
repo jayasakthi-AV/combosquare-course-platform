@@ -1,10 +1,9 @@
-// src/services/api.js
 import axios from 'axios';
 
 // Backend API URL
 const API_URL = 'http://localhost:8001/api';
 
-// Create axios instance
+// Create axios instance  ← THIS MUST EXIST
 const api = axios.create({
   baseURL: API_URL,
   headers: {
@@ -26,7 +25,6 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Token expired or invalid - logout user
       localStorage.removeItem('access_token');
       localStorage.removeItem('user');
       window.location.href = '/login';
@@ -37,55 +35,39 @@ api.interceptors.response.use(
 
 // ============= AUTH FUNCTIONS =============
 
-/**
- * Signup new user
- */
 export const signup = async (fullName, email, password, mobile = null) => {
   try {
-    const response = await api.post('/signup', {
+    const response = await api.post('/auth/signup', {
       full_name: fullName,
       email: email,
       password: password,
       mobile: mobile
     });
-
-    // Save token and user data to localStorage
     localStorage.setItem('access_token', response.data.access_token);
     localStorage.setItem('user', JSON.stringify(response.data.user));
-
     return response.data;
   } catch (error) {
     throw error;
   }
 };
 
-/**
- * Login user
- */
 export const login = async (email, password) => {
   try {
-    const response = await api.post('/login', {
+    const response = await api.post('/auth/login', {
       email: email,
       password: password
     });
-
-    // Save token and user data to localStorage
     localStorage.setItem('access_token', response.data.access_token);
     localStorage.setItem('user', JSON.stringify(response.data.user));
-
     return response.data;
   } catch (error) {
     throw error;
   }
 };
 
-/**
- * Get current user info
- */
 export const getCurrentUser = async () => {
   try {
-    const response = await api.get('/me');
-    // Update localStorage with latest user data
+    const response = await api.get('/auth/me');
     localStorage.setItem('user', JSON.stringify(response.data));
     return response.data;
   } catch (error) {
@@ -93,35 +75,101 @@ export const getCurrentUser = async () => {
   }
 };
 
-/**
- * Logout user
- */
 export const logout = () => {
   localStorage.removeItem('access_token');
   localStorage.removeItem('user');
   window.location.href = '/login';
 };
 
-/**
- * Check if user is logged in
- */
 export const isLoggedIn = () => {
   return localStorage.getItem('access_token') !== null;
 };
 
-/**
- * Get user data from localStorage
- */
 export const getUser = () => {
   const userStr = localStorage.getItem('user');
   return userStr ? JSON.parse(userStr) : null;
 };
 
-/**
- * Get auth token
- */
 export const getToken = () => {
   return localStorage.getItem('access_token');
+};
+
+// ============= DASHBOARD FUNCTIONS =============
+
+export const getStudentDashboard = async () => {
+  try {
+    const response = await api.get('/dashboard/me');
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const getAvailablePrograms = async () => {
+  try {
+    const response = await api.get('/dashboard/available-programs');
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const enrollInProgram = async (programId) => {
+  try {
+    const response = await api.post('/enrollments/', {
+      program_id: programId
+    });
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const updateProgress = async (enrollmentId, progress) => {
+  try {
+    const response = await api.put(`/enrollments/${enrollmentId}/progress`, {
+      progress: progress
+    });
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const getAdminStats = async () => {
+  try {
+    const response = await api.get('/admin/stats');
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const getAllUsers = async () => {
+  try {
+    const response = await api.get('/admin/users');
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const getAllEnrollments = async () => {
+  try {
+    const response = await api.get('/admin/enrollments');
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const getAllContacts = async () => {
+  try {
+    const response = await api.get('/admin/contacts');
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
 };
 
 export default api;

@@ -18,14 +18,11 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-
-
 import Footer from "../components/home/Footer";
-
+import { enrollInProgram, isLoggedIn, getStudentDashboard } from "../services/api";
 
 function useTypingEffect(text, speed = 50) {
   const [displayedText, setDisplayedText] = useState("");
-
   useEffect(() => {
     let index = 0;
     const interval = setInterval(() => {
@@ -33,27 +30,74 @@ function useTypingEffect(text, speed = 50) {
       index++;
       if (index > text.length) clearInterval(interval);
     }, speed);
-
     return () => clearInterval(interval);
   }, [text, speed]);
-
   return displayedText;
 }
 
 export default function ProgramPage() {
   const { programId } = useParams();
   const program = programData[programId];
-
   const typedTitle = useTypingEffect(program?.title || "", 60);
-
   const [openModule, setOpenModule] = useState(null);
   const [activeTestimonial, setActiveTestimonial] = useState(0);
-
   const navigate = useNavigate();
+
+  // ── Enrollment state ──
+  const [enrolling, setEnrolling] = useState(false);
+  const [isEnrolled, setIsEnrolled] = useState(false);
+  const [enrollMessage, setEnrollMessage] = useState("");
 
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [programId]);
+
+  // Check if already enrolled
+  useEffect(() => {
+    const checkEnrollment = async () => {
+      if (!isLoggedIn()) return;
+      try {
+        const data = await getStudentDashboard();
+        const alreadyEnrolled = data.enrolled_programs?.some(
+          (p) => p.slug === programId
+        );
+        setIsEnrolled(alreadyEnrolled);
+      } catch (err) {
+        // not logged in or error — ignore
+      }
+    };
+    checkEnrollment();
+  }, [programId]);
+
+  const handleEnroll = async () => {
+    // Not logged in — redirect to login
+    if (!isLoggedIn()) {
+      navigate("/login");
+      return;
+    }
+
+    // Already enrolled — go to dashboard
+    if (isEnrolled) {
+      navigate("/dashboard");
+      return;
+    }
+
+    try {
+      setEnrolling(true);
+      // Find program ID from slug using programs API
+      const response = await fetch(`http://localhost:8001/api/programs/${programId}`);
+      const programData = await response.json();
+      await enrollInProgram(programData.id);
+      setIsEnrolled(true);
+      setEnrollMessage("Successfully enrolled! Redirecting to dashboard...");
+      setTimeout(() => navigate("/dashboard"), 1500);
+    } catch (err) {
+      const msg = err.response?.data?.detail || "Enrollment failed. Please try again.";
+      setEnrollMessage(msg);
+    } finally {
+      setEnrolling(false);
+    }
+  };
 
   if (!program) {
     return (
@@ -63,58 +107,21 @@ export default function ProgramPage() {
     );
   }
 
-  
   const learningJourney = [
-    {
-      label: "Step 1",
-      title: "Strong Foundations",
-      desc: "Understand all the core concepts step-by-step, even if you are starting as a complete beginner.",
-      Icon: Clock,
-    },
-    {
-      label: "Step 2",
-      title: "Hands-on Practice",
-      desc: "Apply every topic with coding exercises and mini tasks that build real confidence.",
-      Icon: Target,
-    },
-    {
-      label: "Step 3",
-      title: "Real Projects",
-      desc: "Create job-ready, real world projects to showcase in your portfolio.",
-      Icon: Trophy,
-    },
+    { label: "Step 1", title: "Strong Foundations", desc: "Understand all the core concepts step-by-step, even if you are starting as a complete beginner.", Icon: Clock },
+    { label: "Step 2", title: "Hands-on Practice", desc: "Apply every topic with coding exercises and mini tasks that build real confidence.", Icon: Target },
+    { label: "Step 3", title: "Real Projects", desc: "Create job-ready, real world projects to showcase in your portfolio.", Icon: Trophy },
   ];
 
   const finalTestimonials = [
-    {
-      name: "Harini",
-      role: "Final Year – CSBS",
-      feedback:
-        "Before this program I was scared of projects. Now I have a complete portfolio and feel confident for internships.",
-      image: "https://i.postimg.cc/pdQm4Vnb/woman-1.jpg",
-    },
-    {
-      name: "Vignesh",
-      role: "Junior Developer Intern",
-      feedback:
-        "The roadmap and practice tasks helped me understand exactly what to learn next. It felt very structured and practical.",
-      image: "https://i.postimg.cc/6Q5zVt0M/man-2.jpg",
-    },
-    {
-      name: "Sangeetha",
-      role: "2nd Year Student",
-      feedback:
-        "The real-world examples made learning simple. The projects gave me something strong to show in my resume.",
-      image: "https://i.postimg.cc/fTZXbn3L/woman-3.jpg",
-    },
+    { name: "Harini", role: "Final Year – CSBS", feedback: "Before this program I was scared of projects. Now I have a complete portfolio and feel confident for internships.", image: "https://i.postimg.cc/pdQm4Vnb/woman-1.jpg" },
+    { name: "Vignesh", role: "Junior Developer Intern", feedback: "The roadmap and practice tasks helped me understand exactly what to learn next. It felt very structured and practical.", image: "https://i.postimg.cc/6Q5zVt0M/man-2.jpg" },
+    { name: "Sangeetha", role: "2nd Year Student", feedback: "The real-world examples made learning simple. The projects gave me something strong to show in my resume.", image: "https://i.postimg.cc/fTZXbn3L/woman-3.jpg" },
   ];
 
-  
   useEffect(() => {
     const interval = setInterval(() => {
-      setActiveTestimonial(
-        (prev) => (prev + 1) % finalTestimonials.length
-      );
+      setActiveTestimonial((prev) => (prev + 1) % finalTestimonials.length);
     }, 5000);
     return () => clearInterval(interval);
   }, []);
@@ -122,40 +129,35 @@ export default function ProgramPage() {
   const fadeUp = { hidden: { opacity: 0, y: 40 }, visible: { opacity: 1, y: 0 } };
   const fadeIn = { hidden: { opacity: 0, y: 10 }, visible: { opacity: 1, y: 0 } };
 
+  // ── Enroll button label helper ──
+  const enrollBtnLabel = () => {
+    if (enrolling) return "Enrolling...";
+    if (isEnrolled) return "Go to Dashboard →";
+    if (!isLoggedIn()) return "Login to Enroll";
+    return "Enroll Now";
+  };
+
   return (
     <div className="pt-24 bg-gray-50 min-h-screen flex flex-col">
 
-      <section className="relative overflow-hidden bg-gradient-to-br from-purple-900 via-purple-900 to-indigo-700 
-      text-white py-14 sm:py-20 md:py-24"> 
-      
-
-     
+      <section className="relative overflow-hidden bg-gradient-to-br from-purple-900 via-purple-900 to-indigo-700 text-white py-14 sm:py-20 md:py-24">
         <div className="absolute top-10 left-10 w-24 h-24 bg-purple-400 opacity-30 rounded-full blur-3xl animate-[glow_6s_infinite]" />
         <div className="absolute bottom-14 right-14 w-32 h-32 bg-indigo-400 opacity-30 rounded-full blur-3xl animate-[glow_8s_infinite]" />
 
         <div className="max-w-7xl mx-auto px-6 grid md:grid-cols-2 gap-12 relative z-10 items-center">
-
-          
           <div className="animate-[fadeUp_0.9s_ease-out]">
-
             <div className="flex items-center gap-2 mb-4">
               <Sparkles className="text-yellow-300" />
-              <p className="uppercase tracking-wider text-purple-200 text-sm font-semibold">
-                Premium Program
-              </p>
+              <p className="uppercase tracking-wider text-purple-200 text-sm font-semibold">Premium Program</p>
             </div>
 
-           
             <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold leading-tight drop-shadow-2xl flex min-h-[70px]">
               {typedTitle}
               <span className="ml-1 border-r-4 border-yellow-300 animate-pulse" />
             </h1>
 
-            <p className="mt-5 text-base sm:text-lg text-purple-100 max-w-xl opacity-90">
-              {program.subtitle}
-            </p>
+            <p className="mt-5 text-base sm:text-lg text-purple-100 max-w-xl opacity-90">{program.subtitle}</p>
 
-          
             <div className="grid grid-cols-1 gap-4 mt-10">
               {program.highlights?.map((h, i) => (
                 <div key={i} className="flex items-center gap-4 px-5 py-4 rounded-xl bg-white/10 border">
@@ -167,81 +169,63 @@ export default function ProgramPage() {
               ))}
             </div>
 
-            
+            {/* Enroll message */}
+            {enrollMessage && (
+              <div className={`mt-4 p-3 rounded-xl text-sm font-medium ${
+                isEnrolled ? "bg-green-500/20 text-green-200" : "bg-red-500/20 text-red-200"
+              }`}>
+                {enrollMessage}
+              </div>
+            )}
+
             <div className="mt-8 flex flex-wrap gap-4">
-              <motion.button whileHover={{ scale: 1.05, y: -2 }} className="px-8 py-3 bg-white text-purple-700 font-bold rounded-full flex items-center gap-2">
-                Enroll Now <ArrowRight className="w-5 h-5" />
+              {/* ── Enroll Now Button ── */}
+              <motion.button
+                whileHover={{ scale: 1.05, y: -2 }}
+                onClick={handleEnroll}
+                disabled={enrolling}
+                className={`px-8 py-3 font-bold rounded-full flex items-center gap-2 transition ${
+                  isEnrolled
+                    ? "bg-green-400 text-white"
+                    : "bg-white text-purple-700 hover:bg-purple-100"
+                } disabled:opacity-50`}
+              >
+                {enrollBtnLabel()} <ArrowRight className="w-5 h-5" />
               </motion.button>
 
-              <motion.button whileHover={{ scale: 1.03 }} className="px-8 py-3 border border-white rounded-full hover:bg-white hover:text-purple-700">
+              <motion.button
+                whileHover={{ scale: 1.03 }}
+                className="px-8 py-3 border border-white rounded-full hover:bg-white hover:text-purple-700"
+              >
                 Download Curriculum
               </motion.button>
             </div>
-
           </div>
 
-        
           <div className="flex justify-center md:justify-end animate-[fadeUp_1.2s_ease-out]">
             <div className="relative p-[3px] rounded-3xl bg-gradient-to-r from-purple-300 to-purple-500">
-
               <div className="bg-white/10 backdrop-blur-2xl rounded-3xl p-4 border shadow-xl">
-
-                
-<img
-  src={program.heroImg}
-  alt={program.title}
-  className="w-full max-w-[260px] sm:max-w-[320px] md:max-w-[400px] rounded-2xl object-contain mx-auto"
-/>
-
-
+                <img src={program.heroImg} alt={program.title} className="w-full max-w-[260px] sm:max-w-[320px] md:max-w-[400px] rounded-2xl object-contain mx-auto" />
               </div>
-
             </div>
           </div>
-
         </div>
       </section>
 
-     
       <div className="bg-purple-50">
-         <motion.section
-          className="max-w-7xl mx-auto px-6 py-20"
-          variants={fadeUp}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, amount: 0.2 }}
-          transition={{ duration: 0.6 }}
-        >
-                    <div className="text-center mb-14">
-            <h2 className="text-2xl text-purple-600 font-bold drop-shadow-sm">
-              Why Choose This Program?
-            </h2>
-            <p className="text-black mt-2 text-4xl font-extrabold">
-              Designed for modern learners, focused on{" "}
-              <span className="text-purple-600">strong outcomes.</span>
-            </p>
+        <motion.section className="max-w-7xl mx-auto px-6 py-20" variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.2 }} transition={{ duration: 0.6 }}>
+          <div className="text-center mb-14">
+            <h2 className="text-2xl text-purple-600 font-bold drop-shadow-sm">Why Choose This Program?</h2>
+            <p className="text-black mt-2 text-4xl font-extrabold">Designed for modern learners, focused on <span className="text-purple-600">strong outcomes.</span></p>
           </div>
-
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
             {program.highlights?.map((h, i) => (
-              <motion.div
-                key={i}
-                variants={fadeUp}
-                transition={{ delay: i * 0.15, duration: 0.5 }}
-                className="relative group p-[1px] rounded-2xl bg-gradient-to-br from-purple-300/50 via-transparent to-indigo-400/50"
-              >
-                <div
-                  className="bg-white/60 backdrop-blur-xl p-7 rounded-2xl shadow-xl border border-white/40
-                  group-hover:shadow-purple-300/40 group-hover:-translate-y-2 transition-all duration-300"
-                >
+              <motion.div key={i} variants={fadeUp} transition={{ delay: i * 0.15, duration: 0.5 }} className="relative group p-[1px] rounded-2xl bg-gradient-to-br from-purple-300/50 via-transparent to-indigo-400/50">
+                <div className="bg-white/60 backdrop-blur-xl p-7 rounded-2xl shadow-xl border border-white/40 group-hover:shadow-purple-300/40 group-hover:-translate-y-2 transition-all duration-300">
                   <div className="flex items-center justify-center w-14 h-14 rounded-full bg-purple-100 mb-5 group-hover:bg-purple-200 transition-all duration-300">
                     <CheckCircle className="text-purple-700 w-8 h-8 group-hover:scale-110 transition-transform" />
                   </div>
-
-                  <p className="text-gray-800 font-semibold text-lg text-center leading-relaxed">
-                    {h}
-                  </p>
-
+                  <p className="text-gray-800 font-semibold text-lg text-center leading-relaxed">{h}</p>
                   <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 bg-gradient-to-br from-purple-200/20 to-indigo-300/20 blur-xl transition-opacity duration-500" />
                 </div>
               </motion.div>
@@ -250,70 +234,24 @@ export default function ProgramPage() {
         </motion.section>
       </div>
 
-      
-      <motion.section
-        className="max-w-7xl mx-auto px-6 py-20"
-        variants={fadeUp}
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, amount: 0.2 }}
-        transition={{ duration: 0.6 }}
-      >
-        <h2 className="text-2xl font-extrabold text-gray-900 mb-10 text-center drop-shadow-sm">
-          What You Will Learn
-        </h2>
-
+      <motion.section className="max-w-7xl mx-auto px-6 py-20" variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.2 }} transition={{ duration: 0.6 }}>
+        <h2 className="text-2xl font-extrabold text-gray-900 mb-10 text-center drop-shadow-sm">What You Will Learn</h2>
         <div className="space-y-5">
           {program.curriculum?.map((mod, idx) => (
-            <motion.div
-              key={idx}
-              className="relative group rounded-2xl p-[2px] bg-gradient-to-r from-purple-300/60 via-indigo-300/40 to-purple-400/60 hover:shadow-purple-300/40 transition duration-300"
-            >
+            <motion.div key={idx} className="relative group rounded-2xl p-[2px] bg-gradient-to-r from-purple-300/60 via-indigo-300/40 to-purple-400/60 hover:shadow-purple-300/40 transition duration-300">
               <div className="bg-white/70 backdrop-blur-xl rounded-2xl p-5 shadow-xl border border-white/40">
-                <button
-                  className="w-full flex justify-between items-center text-left"
-                  onClick={() =>
-                    setOpenModule(openModule === idx ? null : idx)
-                  }
-                >
+                <button className="w-full flex justify-between items-center text-left" onClick={() => setOpenModule(openModule === idx ? null : idx)}>
                   <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center text-purple-700 font-bold text-lg shadow-inner group-hover:scale-110 transition-transform">
-                      {idx + 1}
-                    </div>
-
-                    <span className="text-xl font-semibold text-gray-900 group-hover:text-purple-700 transition-colors">
-                      {mod}
-                    </span>
+                    <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center text-purple-700 font-bold text-lg shadow-inner group-hover:scale-110 transition-transform">{idx + 1}</div>
+                    <span className="text-xl font-semibold text-gray-900 group-hover:text-purple-700 transition-colors">{mod}</span>
                   </div>
-
-                  <motion.div
-                    animate={{ rotate: openModule === idx ? 180 : 0 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    {openModule === idx ? (
-                      <ChevronUp className="text-purple-700 w-6 h-6" />
-                    ) : (
-                      <ChevronDown className="text-purple-700 w-6 h-6" />
-                    )}
+                  <motion.div animate={{ rotate: openModule === idx ? 180 : 0 }} transition={{ duration: 0.3 }}>
+                    {openModule === idx ? <ChevronUp className="text-purple-700 w-6 h-6" /> : <ChevronDown className="text-purple-700 w-6 h-6" />}
                   </motion.div>
                 </button>
-
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={
-                    openModule === idx
-                      ? { height: "auto", opacity: 1 }
-                      : { height: 0, opacity: 0 }
-                  }
-                  transition={{ duration: 0.35, ease: "easeInOut" }}
-                  className="overflow-hidden"
-                >
+                <motion.div initial={{ height: 0, opacity: 0 }} animate={openModule === idx ? { height: "auto", opacity: 1 } : { height: 0, opacity: 0 }} transition={{ duration: 0.35, ease: "easeInOut" }} className="overflow-hidden">
                   <div className="pt-4 pl-14 pr-4 pb-3 text-gray-700 leading-relaxed text-base">
-                    <p>
-                      This module includes hands-on exercises, real-world
-                      examples, and structured guided learning designed to
-                      strengthen your fundamentals.
-                    </p>
+                    <p>This module includes hands-on exercises, real-world examples, and structured guided learning designed to strengthen your fundamentals.</p>
                   </div>
                 </motion.div>
               </div>
@@ -322,69 +260,26 @@ export default function ProgramPage() {
         </div>
       </motion.section>
 
-      
-      <motion.section
-        className="max-w-7xl mx-auto px-6 py-20"
-        variants={fadeUp}
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, amount: 0.3 }}
-        transition={{ duration: 0.7 }}
-      >
-        <h2 className="text-2xl font-bold text-purple-600 mb-6">
-          Your Learning Journey
-        </h2>
-
-        <p className="text-black font-extrabold text-2xl max-w-2xl mb-12">
-          A structured, well-crafted roadmap that gradually transforms you from
-          a beginner to a{" "}
-          <span className="text-purple-600">confident, project-ready developer.</span>
-        </p>
-
-
+      <motion.section className="max-w-7xl mx-auto px-6 py-20" variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.3 }} transition={{ duration: 0.7 }}>
+        <h2 className="text-2xl font-bold text-purple-600 mb-6">Your Learning Journey</h2>
+        <p className="text-black font-extrabold text-2xl max-w-2xl mb-12">A structured, well-crafted roadmap that gradually transforms you from a beginner to a <span className="text-purple-600">confident, project-ready developer.</span></p>
         <div className="relative pl-6 sm:pl-10">
-          <motion.div
-            className="absolute left-4 top-0 bottom-0 w-[4px] bg-gradient-to-b from-purple-400 via-purple-500 to-indigo-600 rounded-full shadow-lg"
-            initial={{ height: 0 }}
-            whileInView={{ height: "100%" }}
-            transition={{ duration: 1, ease: "easeInOut" }}
-          />
-
+          <motion.div className="absolute left-4 top-0 bottom-0 w-[4px] bg-gradient-to-b from-purple-400 via-purple-500 to-indigo-600 rounded-full shadow-lg" initial={{ height: 0 }} whileInView={{ height: "100%" }} transition={{ duration: 1, ease: "easeInOut" }} />
           <div className="space-y-12">
             {learningJourney.map(({ label, title, desc, Icon }, idx) => (
-              <motion.div
-                key={idx}
-                variants={fadeIn}
-                transition={{ duration: 0.5, delay: idx * 0.15 }}
-                className="relative flex gap-6 items-start"
-              >
-                {/* Dot */}
+              <motion.div key={idx} variants={fadeIn} transition={{ duration: 0.5, delay: idx * 0.15 }} className="relative flex gap-6 items-start">
                 <div className="absolute left-0 -translate-x-[6px] flex items-center justify-center">
                   <div className="w-6 h-6 rounded-full bg-white border-2 border-purple-600 shadow-md relative">
                     <span className="absolute inset-0 rounded-full bg-purple-500 opacity-40 blur-md animate-ping" />
                   </div>
                 </div>
-
-                {/* Card */}
-                <motion.div
-                  whileHover={{ y: -5, scale: 1.02 }}
-                  transition={{ type: "spring", stiffness: 200, damping: 15 }}
-                  className="bg-white/70 backdrop-blur-2xl border border-white/40 shadow-xl rounded-2xl px-6 py-5 w-full hover:shadow-purple-300/40 hover:border-purple-300 transition-all"
-                >
+                <motion.div whileHover={{ y: -5, scale: 1.02 }} transition={{ type: "spring", stiffness: 200, damping: 15 }} className="bg-white/70 backdrop-blur-2xl border border-white/40 shadow-xl rounded-2xl px-6 py-5 w-full hover:shadow-purple-300/40 hover:border-purple-300 transition-all">
                   <div className="flex justify-between items-center mb-2">
-                    <p className="uppercase text-xs font-semibold tracking-wider text-purple-600">
-                      {label}
-                    </p>
+                    <p className="uppercase text-xs font-semibold tracking-wider text-purple-600">{label}</p>
                     <Icon className="w-6 h-6 text-purple-700 opacity-90" />
                   </div>
-
-                  <h3 className="text-xl font-semibold text-gray-900">
-                    {title}
-                  </h3>
-
-                  <p className="text-gray-600 mt-2 text-base leading-relaxed">
-                    {desc}
-                  </p>
+                  <h3 className="text-xl font-semibold text-gray-900">{title}</h3>
+                  <p className="text-gray-600 mt-2 text-base leading-relaxed">{desc}</p>
                 </motion.div>
               </motion.div>
             ))}
@@ -392,323 +287,138 @@ export default function ProgramPage() {
         </div>
       </motion.section>
 
-
-      <motion.section
-        className="max-w-7xl mx-auto px-6 py-20"
-        variants={fadeUp}
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, amount: 0.2 }}
-        transition={{ duration: 0.6 }}
-      >
-        <h2 className="text-2xl font-bold text-purple-600 mb-4">
-          Tools & Technologies You Will Use
-        </h2>
-
-        <p className="text-black text-2xl font-extrabold max-w-xl mb-12 leading-relaxed">
-          Work with <span className="text-purple-600">industry-standard tools</span> that top
-          companies use in real production environments.
-        </p>
-
+      <motion.section className="max-w-7xl mx-auto px-6 py-20" variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.2 }} transition={{ duration: 0.6 }}>
+        <h2 className="text-2xl font-bold text-purple-600 mb-4">Tools & Technologies You Will Use</h2>
+        <p className="text-black text-2xl font-extrabold max-w-xl mb-12 leading-relaxed">Work with <span className="text-purple-600">industry-standard tools</span> that top companies use in real production environments.</p>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-8">
           {program.tools?.map((tool, index) => (
-            <motion.div
-              key={index}
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              whileInView={{ opacity: 1, scale: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.35, delay: index * 0.08 }}
-              whileHover={{ y: -4, scale: 1.03 }}
-              className="relative rounded-xl border border-gray-200 bg-white shadow-sm hover:shadow-lg transition-all p-6 flex items-center justify-center group"
-            >
-              <p className="text-lg font-semibold text-gray-800 group-hover:text-purple-700 transition-all tracking-wide">
-                {tool}
-              </p>
-
+            <motion.div key={index} initial={{ opacity: 0, scale: 0.95, y: 20 }} whileInView={{ opacity: 1, scale: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.35, delay: index * 0.08 }} whileHover={{ y: -4, scale: 1.03 }} className="relative rounded-xl border border-gray-200 bg-white shadow-sm hover:shadow-lg transition-all p-6 flex items-center justify-center group">
+              <p className="text-lg font-semibold text-gray-800 group-hover:text-purple-700 transition-all tracking-wide">{tool}</p>
               <div className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-10 bg-gradient-to-br from-purple-600 to-indigo-600 transition-all" />
             </motion.div>
           ))}
         </div>
       </motion.section>
 
-     
-      <motion.section
-        className="max-w-7xl mx-auto px-6 py-20"
-        variants={fadeUp}
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, amount: 0.2 }}
-        transition={{ duration: 0.6 }}
-      >
-        <h2 className="text-2xl font-bold text-purple-600 mb-6">
-          Real-World Projects You Will Build
-        </h2>
-
-        <p className="text-black text-2xl font-extrabold max-w-2xl mb-12 leading-relaxed">
-          Each project is carefully structured to mirror real industry workflows — focusing on
-          clean <span className="text-purple-600">architecture, scalability, and professional development practices.</span>
-        </p>
-
+      <motion.section className="max-w-7xl mx-auto px-6 py-20" variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.2 }} transition={{ duration: 0.6 }}>
+        <h2 className="text-2xl font-bold text-purple-600 mb-6">Real-World Projects You Will Build</h2>
+        <p className="text-black text-2xl font-extrabold max-w-2xl mb-12 leading-relaxed">Each project is carefully structured to mirror real industry workflows — focusing on clean <span className="text-purple-600">architecture, scalability, and professional development practices.</span></p>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
-          {[ 
-            {
-              title: "Portfolio Website",
-              desc: "A polished personal website built using modern UI principles and responsive design standards.",
-              icon: <LayoutDashboard className="w-10 h-10 text-purple-700" />,
-            },
-            {
-              title: "E-Commerce Platform",
-              desc: "A scalable storefront featuring product listings, checkout flow, and secure backend APIs.",
-              icon: <ShoppingCart className="w-10 h-10 text-purple-700" />,
-            },
-            {
-              title: "Authentication System",
-              desc: "A secure JWT-based auth system with role permissions and encryption best practices.",
-              icon: <ShieldCheck className="w-10 h-10 text-purple-700" />,
-            },
-            {
-              title: "Blog Management System",
-              desc: "A CMS-style platform featuring posts, comments, admin tools, and real database integration.",
-              icon: <FileText className="w-10 h-10 text-purple-700" />,
-            },
+          {[
+            { title: "Portfolio Website", desc: "A polished personal website built using modern UI principles and responsive design standards.", icon: <LayoutDashboard className="w-10 h-10 text-purple-700" /> },
+            { title: "E-Commerce Platform", desc: "A scalable storefront featuring product listings, checkout flow, and secure backend APIs.", icon: <ShoppingCart className="w-10 h-10 text-purple-700" /> },
+            { title: "Authentication System", desc: "A secure JWT-based auth system with role permissions and encryption best practices.", icon: <ShieldCheck className="w-10 h-10 text-purple-700" /> },
+            { title: "Blog Management System", desc: "A CMS-style platform featuring posts, comments, admin tools, and real database integration.", icon: <FileText className="w-10 h-10 text-purple-700" /> },
           ].map((project, index) => (
-            <motion.div
-              key={index}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.4, delay: index * 0.1 }}
-              whileHover={{ y: -4, scale: 1.01 }}
-
-              
-              className="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-lg transition-all 
-              p-4 sm:p-6 flex flex-col gap-4"
-            >
-              <div className="p-3 rounded-xl bg-purple-50 w-fit">
-                {project.icon}
-              </div>
-
-              <h3 className="text-xl font-semibold text-gray-900">
-                {project.title}
-              </h3>
-
-              <p className="text-gray-600 text-sm leading-relaxed">
-                {project.desc}
-              </p>
-
-              <button className="mt-4 text-purple-700 font-medium text-sm hover:underline inline-flex items-center gap-1">
-                Learn More →
-              </button>
+            <motion.div key={index} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.4, delay: index * 0.1 }} whileHover={{ y: -4, scale: 1.01 }} className="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-lg transition-all p-4 sm:p-6 flex flex-col gap-4">
+              <div className="p-3 rounded-xl bg-purple-50 w-fit">{project.icon}</div>
+              <h3 className="text-xl font-semibold text-gray-900">{project.title}</h3>
+              <p className="text-gray-600 text-sm leading-relaxed">{project.desc}</p>
+              <button className="mt-4 text-purple-700 font-medium text-sm hover:underline inline-flex items-center gap-1">Learn More →</button>
             </motion.div>
           ))}
         </div>
       </motion.section>
 
-      
-      <motion.section
-  className="w-full px-4 sm:px-6 py-24 max-w-7xl mx-auto"
-
-        variants={fadeUp}
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, amount: 0.3 }}
-        transition={{ duration: 0.7 }}
-      >
+      <motion.section className="w-full px-4 sm:px-6 py-24 max-w-7xl mx-auto" variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.3 }} transition={{ duration: 0.7 }}>
         <div className="text-center mb-12">
-          <h2 className="text-4xl md:text-5xl font-extrabold text-gray-900 tracking-tight">
-            Student Success Stories
-          </h2>
-          <p className="text-gray-600 mt-3 text-lg max-w-2xl mx-auto">
-            Hear how students upgraded their careers with structured learning,
-            hands-on projects, and expert mentorship.
-          </p>
+          <h2 className="text-4xl md:text-5xl font-extrabold text-gray-900 tracking-tight">Student Success Stories</h2>
+          <p className="text-gray-600 mt-3 text-lg max-w-2xl mx-auto">Hear how students upgraded their careers with structured learning, hands-on projects, and expert mentorship.</p>
         </div>
-
-       
         <div className="relative overflow-hidden w-full">
-
-          <motion.div
-            className="flex"
-            animate={{ x: `-${activeTestimonial * 100}%` }}
-            transition={{ type: "spring", stiffness: 140, damping: 20 }}
-            style={{ width: `${finalTestimonials.length * 100}%` }}
-          >
+          <motion.div className="flex" animate={{ x: `-${activeTestimonial * 100}%` }} transition={{ type: "spring", stiffness: 140, damping: 20 }} style={{ width: `${finalTestimonials.length * 100}%` }}>
             {finalTestimonials.map((t, index) => (
-              <div
-                key={index}
-                className="w-full flex-shrink-0 px-4"
-                style={{ minWidth: "100%" }}
-              >
-                <motion.div
-                  whileHover={{ scale: 1.02, y: -6 }}
-                  transition={{ type: "spring", stiffness: 220, damping: 16 }}
-                  className="bg-white/80 backdrop-blur-xl border border-gray-200/70 shadow-xl hover:shadow-2xl 
-                  rounded-3xl p-8 sm:p-10 transition-all duration-300"
-                >
-                  <p className="text-gray-800 text-lg leading-relaxed italic">
-                    "{t.feedback}"
-                  </p>
-
+              <div key={index} className="w-full flex-shrink-0 px-4" style={{ minWidth: "100%" }}>
+                <motion.div whileHover={{ scale: 1.02, y: -6 }} transition={{ type: "spring", stiffness: 220, damping: 16 }} className="bg-white/80 backdrop-blur-xl border border-gray-200/70 shadow-xl hover:shadow-2xl rounded-3xl p-8 sm:p-10 transition-all duration-300">
+                  <p className="text-gray-800 text-lg leading-relaxed italic">"{t.feedback}"</p>
                   <div className="flex items-center justify-between mt-8">
                     <div className="flex items-center gap-4">
-                      <img
-                        src={`https://randomuser.me/api/portraits/${
-                          index % 2 === 0 ? "women" : "men"
-                        }/${(index + 10) % 90}.jpg`}
-                        alt={t.name}
-                        className="w-12 h-12 sm:w-14 sm:h-14 rounded-full object-cover shadow-lg border border-purple-200"
-                      />
-
+                      <img src={`https://randomuser.me/api/portraits/${index % 2 === 0 ? "women" : "men"}/${(index + 10) % 90}.jpg`} alt={t.name} className="w-12 h-12 sm:w-14 sm:h-14 rounded-full object-cover shadow-lg border border-purple-200" />
                       <div>
-                        <h4 className="text-lg font-bold text-gray-900">
-                          {t.name}
-                        </h4>
+                        <h4 className="text-lg font-bold text-gray-900">{t.name}</h4>
                         <p className="text-sm text-gray-500">{t.role}</p>
                       </div>
                     </div>
-
                     <div className="flex gap-1">
-                      {[...Array(5)].map((_, i) => (
-                        <Star
-                          key={i}
-                          className="w-5 h-5 text-yellow-400 fill-yellow-400"
-                        />
-                      ))}
+                      {[...Array(5)].map((_, i) => (<Star key={i} className="w-5 h-5 text-yellow-400 fill-yellow-400" />))}
                     </div>
                   </div>
                 </motion.div>
               </div>
             ))}
           </motion.div>
-
-         
           <div className="flex justify-center mt-6 gap-2">
             {finalTestimonials.map((_, idx) => (
-              <button
-                key={idx}
-                onClick={() => setActiveTestimonial(idx)}
-                className={`h-3 rounded-full transition-all ${
-                  idx === activeTestimonial
-                    ? "bg-purple-700 w-8"
-                    : "bg-gray-300 w-3"
-                }`}
-              />
+              <button key={idx} onClick={() => setActiveTestimonial(idx)} className={`h-3 rounded-full transition-all ${idx === activeTestimonial ? "bg-purple-700 w-8" : "bg-gray-300 w-3"}`} />
             ))}
           </div>
         </div>
       </motion.section>
 
-      
-<section className="relative py-32 overflow-hidden bg-gradient-to-br from-[#0f172a] via-[#1e1b4b] to-[#2b1055]">
+      {/* Final CTA Section */}
+      <section className="relative py-32 overflow-hidden bg-gradient-to-br from-[#0f172a] via-[#1e1b4b] to-[#2b1055]">
+        <div className="absolute -top-32 -left-32 w-[500px] h-[500px] bg-purple-600/30 blur-[180px] rounded-full" />
+        <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-indigo-600/30 blur-[180px] rounded-full" />
+        <div className="relative max-w-7xl mx-auto px-6">
+          <motion.div initial={{ opacity: 0, y: 50 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.8, ease: "easeOut" }} className="grid md:grid-cols-2 gap-16 items-center">
+            <div className="text-white">
+              <p className="uppercase tracking-widest text-purple-300 text-sm font-semibold mb-4">Career Transformation Program</p>
+              <h2 className="text-4xl md:text-5xl font-extrabold leading-tight">Become job-ready with <span className="text-purple-300">{program.title}</span></h2>
+              <p className="mt-6 text-lg text-purple-100 max-w-xl leading-relaxed">This is not just a course. It's a complete learning system designed to help you master skills, build real-world projects, and confidently step into the industry.</p>
+              <div className="flex flex-wrap gap-4 mt-8">
+                {["Beginner Friendly", "Hands-On Projects", "Industry Aligned", "Mentor Support"].map((tag, i) => (
+                  <div key={i} className="px-5 py-2 rounded-full bg-white/10 border border-white/20 backdrop-blur text-sm font-semibold">{tag}</div>
+                ))}
+              </div>
 
-<div className="absolute -top-32 -left-32 w-[500px] h-[500px] bg-purple-600/30 blur-[180px] rounded-full" />
-<div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-indigo-600/30 blur-[180px] rounded-full" />
+              {/* Enroll message in CTA */}
+              {enrollMessage && (
+                <div className={`mt-4 p-3 rounded-xl text-sm font-medium ${isEnrolled ? "bg-green-500/20 text-green-200" : "bg-red-500/20 text-red-200"}`}>
+                  {enrollMessage}
+                </div>
+              )}
 
-<div className="relative max-w-7xl mx-auto px-6">
-  <motion.div
-    initial={{ opacity: 0, y: 50 }}
-    whileInView={{ opacity: 1, y: 0 }}
-    viewport={{ once: true }}
-    transition={{ duration: 0.8, ease: "easeOut" }}
-    className="grid md:grid-cols-2 gap-16 items-center"
-  >
+              <div className="mt-12 flex flex-wrap gap-6">
+                {/* ── Start Learning / Enroll Button ── */}
+                <motion.button
+                  whileHover={{ scale: 1.08, y: -4 }}
+                  whileTap={{ scale: 0.95 }}
+                  transition={{ type: "spring", stiffness: 300 }}
+                  onClick={handleEnroll}
+                  disabled={enrolling}
+                  className={`px-12 py-4 font-bold text-lg rounded-full shadow-xl transition ${
+                    isEnrolled
+                      ? "bg-green-400 text-white"
+                      : "bg-white text-purple-800 hover:bg-purple-100"
+                  } disabled:opacity-50`}
+                >
+                  {enrollBtnLabel()}
+                </motion.button>
 
-   
-    <div className="text-white">
-      <p className="uppercase tracking-widest text-purple-300 text-sm font-semibold mb-4">
-        Career Transformation Program
-      </p>
+                <motion.button whileHover={{ scale: 1.05 }} className="px-12 py-4 border border-white/40 text-white font-semibold text-lg rounded-full hover:bg-white/10 transition">
+                  Download Curriculum
+                </motion.button>
+              </div>
+            </div>
 
-      <h2 className="text-4xl md:text-5xl font-extrabold leading-tight">
-        Become job-ready with{" "}
-        <span className="text-purple-300">{program.title}</span>
-      </h2>
-
-      <p className="mt-6 text-lg text-purple-100 max-w-xl leading-relaxed">
-        This is not just a course. It’s a complete learning system designed to
-        help you master skills, build real-world projects, and confidently
-        step into the industry.
-      </p>
-
-
-      <div className="flex flex-wrap gap-4 mt-8">
-        {[
-          "Beginner Friendly",
-          "Hands-On Projects",
-          "Industry Aligned",
-          "Mentor Support",
-        ].map((tag, i) => (
-          <div
-            key={i}
-            className="px-5 py-2 rounded-full bg-white/10 border border-white/20 backdrop-blur text-sm font-semibold"
-          >
-            {tag}
-          </div>
-        ))}
-      </div>
-
-
-      <div className="mt-12 flex flex-wrap gap-6">
-      <motion.button
-  whileHover={{ scale: 1.08, y: -4 }}
-  whileTap={{ scale: 0.95 }}
-  transition={{ type: "spring", stiffness: 300 }}
-  onClick={() => navigate("/login")}
-  className="px-12 py-4 bg-white text-purple-800 font-bold text-lg rounded-full shadow-xl"
->
-  Start Learning →
-</motion.button>
-
-
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          className="px-12 py-4 border border-white/40 text-white font-semibold text-lg rounded-full hover:bg-white/10 transition"
-        >
-          Download Curriculum
-        </motion.button>
-      </div>
-    </div>
-
-   
-    <motion.div
-      initial={{ opacity: 0, scale: 0.92 }}
-      whileInView={{ opacity: 1, scale: 1 }}
-      viewport={{ once: true }}
-      transition={{ duration: 0.7, ease: "easeOut" }}
-      className="relative"
-    >
-      
-      <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-purple-400 via-indigo-400 to-purple-600 blur-xl opacity-70" />
-
-      <div className="relative bg-white/10 backdrop-blur-2xl border border-white/20 rounded-3xl p-10 shadow-2xl">
-        <h3 className="text-2xl font-bold text-white mb-6">
-          What you’ll achieve
-        </h3>
-
-        <ul className="space-y-4">
-          {[
-            "Strong fundamentals & advanced concepts",
-            "Portfolio-ready real-world projects",
-            "Confidence to crack interviews",
-            "Clear career roadmap",
-          ].map((item, i) => (
-            <li key={i} className="flex gap-3 text-purple-100">
-              <span className="mt-2 w-2 h-2 rounded-full bg-purple-300" />
-              {item}
-            </li>
-          ))}
-        </ul>
-
-        <div className="mt-8 text-sm text-purple-200">
-          ⭐ Trusted by students preparing for real industry roles
+            <motion.div initial={{ opacity: 0, scale: 0.92 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ duration: 0.7, ease: "easeOut" }} className="relative">
+              <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-purple-400 via-indigo-400 to-purple-600 blur-xl opacity-70" />
+              <div className="relative bg-white/10 backdrop-blur-2xl border border-white/20 rounded-3xl p-10 shadow-2xl">
+                <h3 className="text-2xl font-bold text-white mb-6">What you'll achieve</h3>
+                <ul className="space-y-4">
+                  {["Strong fundamentals & advanced concepts", "Portfolio-ready real-world projects", "Confidence to crack interviews", "Clear career roadmap"].map((item, i) => (
+                    <li key={i} className="flex gap-3 text-purple-100">
+                      <span className="mt-2 w-2 h-2 rounded-full bg-purple-300" />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+                <div className="mt-8 text-sm text-purple-200">⭐ Trusted by students preparing for real industry roles</div>
+              </div>
+            </motion.div>
+          </motion.div>
         </div>
-      </div>
-    </motion.div>
-
-  </motion.div>
-</div>
-</section>
-
+      </section>
 
       <Footer />
     </div>
