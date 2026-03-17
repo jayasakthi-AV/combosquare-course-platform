@@ -51,6 +51,19 @@ export default function AdminDashboard() {
       alert("Failed to update user status");
     }
   };
+  const handleMakeAdmin = async (userId) => {
+    const confirmed = window.confirm(
+      "Promote this user to Admin? They will have full access to the admin panel."
+    );
+    if (!confirmed) return;
+    try {
+      await api.put(`/admin/users/${userId}/make-admin`);
+      await fetchAll();
+      alert("User promoted to Admin successfully! They need to logout and login again.");
+    } catch (err) {
+      alert("Failed to promote user");
+    }
+  };
 
   const handleMarkRead = async (contactId) => {
     try {
@@ -301,19 +314,28 @@ export default function AdminDashboard() {
                         </span>
                       </td>
                       <td className="px-6 py-4">
-                        {user.role !== "admin" && (
-                          <button
-                            onClick={() => handleToggleUser(user.id)}
-                            className={`text-xs px-3 py-1.5 rounded-lg font-medium transition ${
-                              user.is_active
-                                ? "bg-red-50 text-red-600 hover:bg-red-100"
-                                : "bg-green-50 text-green-600 hover:bg-green-100"
-                            }`}
-                          >
-                            {user.is_active ? "Block" : "Unblock"}
-                          </button>
-                        )}
-                      </td>
+  {user.role !== "admin" && (
+    <div className="flex flex-col gap-2">
+      <button
+        onClick={() => handleToggleUser(user.id)}
+        className={`text-xs px-3 py-1.5 rounded-lg font-medium transition ${
+          user.is_active
+            ? "bg-red-50 text-red-600 hover:bg-red-100"
+            : "bg-green-50 text-green-600 hover:bg-green-100"
+        }`}
+      >
+        {user.is_active ? "Block" : "Unblock"}
+      </button>
+
+      <button
+        onClick={() => handleMakeAdmin(user.id)}
+        className="text-xs px-3 py-1.5 rounded-lg font-medium transition bg-purple-50 text-purple-600 hover:bg-purple-100"
+      >
+        Make Admin
+      </button>
+    </div>
+  )}
+</td>
                     </tr>
                   ))}
                 </tbody>

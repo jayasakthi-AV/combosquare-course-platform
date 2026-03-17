@@ -10,6 +10,10 @@ class Settings(BaseSettings):
     DEBUG: bool = True
     FRONTEND_URL: str = "http://localhost:5173"
 
+    # Default admin credentials
+    ADMIN_EMAIL: str = "admin@combosquare.com"
+    ADMIN_PASSWORD: str = "Admin@123"
+
     class Config:
         env_file = ".env"
         case_sensitive = True
