@@ -77,10 +77,10 @@ export default function Navbar() {
             onMouseEnter={() => setDropdownOpen("programs")}
             onMouseLeave={() => setDropdownOpen("")}
           >
-            <button className="relative px-3 py-1 rounded-full flex items-center gap-1 hover:bg-white hover:text-purple-700 transition-colors">
+            <Link to="/programs" className="relative px-3 py-1 rounded-full flex items-center gap-1 hover:bg-white hover:text-purple-700 transition-colors">
               Programs
               <span className="text-xs">{dropdownOpen === "programs" ? "▲" : "▼"}</span>
-            </button>
+            </Link>
             <div className="absolute left-0 top-full h-4 w-full"></div>
             <div className="absolute left-0 top-full mt-4 w-80 bg-white shadow-lg rounded-lg py-3 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity duration-200 z-50 flex flex-col">
               <Link to="/program/full-stack" className="px-4 py-2 text-purple-700 hover:bg-purple-100">Full Stack Developer Program</Link>
@@ -189,7 +189,7 @@ export default function Navbar() {
             {/* PROGRAMS MOBILE */}
             <details className="w-full">
               <summary className="cursor-pointer py-2 flex justify-between items-center">
-                Programs <span>▼</span>
+                <Link to="/programs" onClick={() => setMobileOpen(false)}>Programs</Link> <span>▼</span>
               </summary>
               <div className="pl-4 mt-2 text-white/80 flex flex-col space-y-2">
                 <Link to="/program/full-stack" onClick={() => setMobileOpen(false)} className="block py-2">Full Stack Developer Program</Link>
