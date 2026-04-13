@@ -101,6 +101,16 @@ export default function StudentDashboard() {
               { id: "browse", label: "Browse Programs", icon: "🔍" },
               { id: "profile", label: "My Profile", icon: "👤" },
             ].map((item) => (
+              item.id === "browse" ? (
+                <button
+                  key={item.id}
+                  onClick={() => navigate("/programs")}
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left text-sm font-medium transition text-gray-600 hover:bg-purple-50"
+                >
+                  <span>{item.icon}</span>
+                  {item.label}
+                </button>
+              ) : (
               <button
                 key={item.id}
                 onClick={() => setActiveTab(item.id)}
@@ -113,6 +123,7 @@ export default function StudentDashboard() {
                 <span>{item.icon}</span>
                 {item.label}
               </button>
+              )
             ))}
           </nav>
         </div>
@@ -163,7 +174,7 @@ export default function StudentDashboard() {
                 <p className="text-4xl mb-3">📭</p>
                 <p className="text-gray-600 font-medium">You haven't enrolled in any program yet.</p>
                 <button
-                  onClick={() => setActiveTab("browse")}
+                  onClick={() => navigate("/programs")}
                   className="mt-4 px-6 py-2 bg-purple-600 text-white rounded-xl text-sm font-semibold hover:bg-purple-700 transition"
                 >
                   Browse Programs
@@ -214,7 +225,7 @@ export default function StudentDashboard() {
                 <p className="text-4xl mb-3">📭</p>
                 <p className="text-gray-600">No courses enrolled yet.</p>
                 <button
-                  onClick={() => setActiveTab("browse")}
+                  onClick={() => navigate("/programs")}
                   className="mt-4 px-6 py-2 bg-purple-600 text-white rounded-xl text-sm font-semibold hover:bg-purple-700"
                 >
                   Browse Programs
