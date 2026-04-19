@@ -69,34 +69,10 @@ export default function ProgramPage() {
     checkEnrollment();
   }, [programId]);
 
-  const handleEnroll = async () => {
-    // Not logged in — redirect to login
-    if (!isLoggedIn()) {
-      navigate("/login");
-      return;
-    }
-
-    // Already enrolled — go to dashboard
-    if (isEnrolled) {
-      navigate("/dashboard");
-      return;
-    }
-
-    try {
-      setEnrolling(true);
-      // Find program ID from slug using programs API
-      const response = await fetch(`http://localhost:8001/api/programs/${programId}`);
-      const programData = await response.json();
-      await enrollInProgram(programData.id);
-      setIsEnrolled(true);
-      setEnrollMessage("Successfully enrolled! Redirecting to dashboard...");
-      setTimeout(() => navigate("/dashboard"), 1500);
-    } catch (err) {
-      const msg = err.response?.data?.detail || "Enrollment failed. Please try again.";
-      setEnrollMessage(msg);
-    } finally {
-      setEnrolling(false);
-    }
+  const handleEnroll = () => {
+    console.log("CLICKED");
+  
+    navigate(`/pay/${programId}`);
   };
 
   if (!program) {
@@ -182,7 +158,11 @@ export default function ProgramPage() {
               {/* ── Enroll Now Button ── */}
               <motion.button
                 whileHover={{ scale: 1.05, y: -2 }}
-                onClick={handleEnroll}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleEnroll();
+                }}
                 disabled={enrolling}
                 className={`px-8 py-3 font-bold rounded-full flex items-center gap-2 transition ${
                   isEnrolled

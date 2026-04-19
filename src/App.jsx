@@ -1,5 +1,7 @@
 import Navbar from "./components/layout/Navbar";
 import { Routes, Route, useLocation } from "react-router-dom";
+import PaymentPage   from "./pages/PaymentPage";
+import CoursePlayer  from "./pages/CoursePlayer";
 
 import Home from "./pages/Home";
 import Programs from "./pages/Programs";
@@ -33,6 +35,9 @@ export default function App() {
           <Route path="/contact" element={<Contact />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
+          <Route path="/pay/:slug"   element={<ProtectedRoute><PaymentPage /></ProtectedRoute>} />
+// <Route path="/learn/:slug" element={<ProtectedRoute><CoursePlayer /></ProtectedRoute>} />
+
 
           <Route path="/dashboard" element={
             <ProtectedRoute>
