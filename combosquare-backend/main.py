@@ -20,6 +20,7 @@ from routers.dashboard import router as dashboard_router
 
 # ── NEW ──
 from routers.lms import router as lms_router
+from routers import payment
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -38,6 +39,7 @@ app.add_middleware(
 # Serve certificate PDFs as static files
 os.makedirs("static/certificates", exist_ok=True)
 app.mount("/static", StaticFiles(directory="static"), name="static")
+app.include_router(payment.router, prefix="/payment")
 
 app.include_router(auth_router)
 app.include_router(users_router)
@@ -49,6 +51,7 @@ app.include_router(dashboard_router)
 
 # ── NEW: all LMS routes under /api/lms ──
 app.include_router(lms_router, prefix="/api/lms")
+app.include_router(payment.router, prefix="/api/payment")
 
 
 @app.on_event("startup")

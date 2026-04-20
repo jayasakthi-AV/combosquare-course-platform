@@ -38,10 +38,10 @@ export const submitQuiz = (quizId, answers) =>
 // ── Payment ─────────────────────────────────────────────────────
 
 export const createPaymentOrder = (courseId) =>
-  api.post(`${BASE}/payment/create-order`, { course_id: courseId }).then(r => r.data);
+  api.post(`/payment/create-order`, { course_id: courseId }).then(r => r.data);
 
 export const verifyPayment = (payload) =>
-  api.post(`${BASE}/payment/verify`, payload).then(r => r.data);
+  api.post(`/payment/verify`, payload).then(r => r.data);
 
 export const getPaymentStatus = (enrollmentId) =>
   api.get(`${BASE}/payment/${enrollmentId}/status`).then(r => r.data);
@@ -87,10 +87,10 @@ export const openRazorpayCheckout = (order, user, onSuccess, onFailure) => {
     handler: async (response) => {
       try {
         await verifyPayment({
-          enrollment_id       : order.enrollment_id,
-          razorpay_order_id   : response.razorpay_order_id,
-          razorpay_payment_id : response.razorpay_payment_id,
-          razorpay_signature  : response.razorpay_signature,
+          program_id: order.program_id,   // 🔥 ADD THIS LINE
+          razorpay_order_id: response.razorpay_order_id,
+          razorpay_payment_id: response.razorpay_payment_id,
+          razorpay_signature: response.razorpay_signature,
         });
         onSuccess(response);
       } catch (err) {
@@ -108,3 +108,5 @@ export const openRazorpayCheckout = (order, user, onSuccess, onFailure) => {
   rzp.on('payment.failed', (resp) => onFailure(resp.error));
   rzp.open();
 };
+
+

@@ -40,6 +40,7 @@ export default function PaymentPage() {
   }, [slug, navigate]);
 
   const handlePay = async () => {
+    console.log("PAY BUTTON CLICKED"); 
     if (!course) return;
     setPaying(true);
     setError('');
@@ -49,8 +50,7 @@ export default function PaymentPage() {
         order,
         user,
         () => {
-          // Payment verified → go to player
-          navigate(`/learn/${slug}`, { state: { justEnrolled: true } });
+          window.location.href = `/${slug}`;
         },
         (err) => {
           setError(err?.message || 'Payment failed. Please try again.');
@@ -61,6 +61,7 @@ export default function PaymentPage() {
       setError(err.response?.data?.detail || 'Could not create payment order. Try again.');
       setPaying(false);
     }
+    
   };
 
   const fmt = (paise) => `₹${(paise / 100).toLocaleString('en-IN')}`;
@@ -121,8 +122,8 @@ export default function PaymentPage() {
               <div>
                 <p className="text-gray-500 text-xs font-medium uppercase tracking-wide">Total Amount</p>
                 <p className="text-3xl font-black text-purple-700 mt-0.5">
-                  {course?.price === 0 ? 'Free' : fmt(course?.price || 0)}
-                </p>
+  ₹499
+</p>
               </div>
               <div className="text-right">
                 <p className="text-gray-400 text-xs line-through">₹19,999</p>
@@ -149,7 +150,7 @@ export default function PaymentPage() {
               {paying ? (
                 <><Loader size={18} className="animate-spin" /> Processing...</>
               ) : (
-                <><CreditCard size={18} /> {course?.price === 0 ? 'Enroll Free' : `Pay ${fmt(course?.price || 0)}`} <ArrowRight size={16} /></>
+                <><CreditCard size={18} /> Pay ₹499 <ArrowRight size={16} /></>
               )}
             </button>
 

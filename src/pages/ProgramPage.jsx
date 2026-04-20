@@ -20,6 +20,7 @@ import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import Footer from "../components/home/Footer";
 import { enrollInProgram, isLoggedIn, getStudentDashboard } from "../services/api";
+import { getCourseBySlug } from "../services/lmsApi";
 
 function useTypingEffect(text, speed = 50) {
   const [displayedText, setDisplayedText] = useState("");
@@ -57,11 +58,18 @@ export default function ProgramPage() {
     const checkEnrollment = async () => {
       if (!isLoggedIn()) return;
       try {
-        const data = await getStudentDashboard();
-        const alreadyEnrolled = data.enrolled_programs?.some(
-          (p) => p.slug === programId
-        );
-        setIsEnrolled(alreadyEnrolled);
+        useEffect(() => {
+          const fetchCourse = async () => {
+            try {
+              const data = await getCourseBySlug(programId);
+              setIsEnrolled(data.is_enrolled);
+            } catch (err) {
+              console.log("Error fetching course", err);
+            }
+          };
+        
+          fetchCourse();
+        }, [programId]);
       } catch (err) {
         // not logged in or error — ignore
       }
@@ -70,9 +78,11 @@ export default function ProgramPage() {
   }, [programId]);
 
   const handleEnroll = () => {
-    console.log("CLICKED");
-  
-    navigate(`/pay/${programId}`);
+    if (isEnrolled) {
+      navigate(`/learn/${programId}`);
+    } else {
+      navigate(`/pay/${programId}`);
+    }
   };
 
   if (!program) {

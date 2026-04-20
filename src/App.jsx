@@ -16,6 +16,7 @@ import StudentDashboard from "./pages/StudentDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminRoute from "./components/AdminRoute";
+import LearnPage from "./pages/LearnPage";
 
 export default function App() {
   const location = useLocation();
@@ -35,6 +36,7 @@ export default function App() {
           <Route path="/contact" element={<Contact />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
+          <Route path="/learn/:slug" element={<LearnPage />} />
           <Route path="/pay/:slug"   element={<ProtectedRoute><PaymentPage /></ProtectedRoute>} />
 // <Route path="/learn/:slug" element={<ProtectedRoute><CoursePlayer /></ProtectedRoute>} />
 
