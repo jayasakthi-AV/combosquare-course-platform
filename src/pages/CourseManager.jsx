@@ -12,12 +12,13 @@ export default function CourseManager() {
   const [quizQuestion, setQuizQuestion] = useState("");
   const [options, setOptions] = useState(["", "", "", ""]);
   const [answer, setAnswer] = useState("");
-
+  const [lessonId, setLessonId] = useState("");
   // 🔹 CREATE COURSE
   const createCourse = async () => {
-    await api.post("/admin/program", {
+    await api.post("/admin/course", {
       title: courseTitle,
-      slug: slug
+      slug: slug,
+      price: 1000, // 🔥 REQUIRED
     });
     alert("Course created!");
   };
@@ -26,8 +27,9 @@ export default function CourseManager() {
   const createModule = async () => {
     const res = await api.post("/admin/module", {
       title: moduleTitle,
-      course_id: Number(courseId)
+      course_id: Number(courseId),
     });
+  
     alert("Module created!");
     setModuleId(res.data.id);
   };
@@ -37,22 +39,24 @@ export default function CourseManager() {
     const res = await api.post("/admin/lesson", {
       title: lessonTitle,
       module_id: Number(moduleId),
-      video_url: videoUrl
+      video_url: videoUrl,
     });
+  
     alert("Lesson created!");
+    setLessonId(res.data.id); // 🔥 IMPORTANT
   };
-
   // 🔹 CREATE QUIZ
   const createQuiz = async () => {
     await api.post("/admin/quiz", {
-      lesson_id: Number(moduleId),
+      lesson_id: Number(lessonId), // ✅ FIXED
       question: quizQuestion,
       option1: options[0],
       option2: options[1],
       option3: options[2],
       option4: options[3],
-      answer: answer
+      answer: answer,
     });
+  
     alert("Quiz created!");
   };
 
@@ -87,7 +91,7 @@ export default function CourseManager() {
       {/* QUIZ */}
       <div className="bg-white p-4 rounded shadow">
         <h2 className="font-bold mb-2">Create Quiz</h2>
-        <input placeholder="Lesson ID" onChange={(e)=>setModuleId(e.target.value)} className="border p-2 mr-2"/>
+        <input placeholder="Lesson ID" onChange={(e)=>setLessonId(e.target.value)} className="border p-2 mr-2"/> 
         <input placeholder="Question" onChange={(e)=>setQuizQuestion(e.target.value)} className="border p-2 mr-2"/>
 
         {options.map((opt, i) => (

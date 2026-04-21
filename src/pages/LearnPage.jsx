@@ -18,14 +18,19 @@ export default function LearnPage() {
       `http://127.0.0.1:8001/api/lms/courses/${slug}/content`,
       {
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
       }
     );
 
     const data = await res.json();
     console.log("CONTENT 👉", data);
-    setModules(data);
+    if (Array.isArray(data)) {
+      setModules(data);
+    } else {
+      console.log("API ERROR 👉", data);
+      setModules([]); // prevent crash
+    }
   };
 
   useEffect(() => {
@@ -107,36 +112,42 @@ export default function LearnPage() {
       >
         <h2 style={{ marginBottom: "20px" }}>📚 Course</h2>
 
-        {modules.map((mod, mIndex) => (
-          <div key={mIndex}>
-            <h4 style={{ color: "#38bdf8" }}>{mod.module_title}</h4>
+        {Array.isArray(modules) && modules.length > 0 ? (
+  modules.map((mod, mIndex) => (
+    <div key={mIndex}>
+      <h4 style={{ color: "#38bdf8" }}>{mod.module_title}</h4>
 
-            {mod.lessons.map((lesson, lIndex) => (
-              <div
-                key={lesson.id}
-                onClick={() => {
-                  if (!lesson.unlocked) return; // 🔒 BLOCK CLICK
+      {mod.lessons.map((lesson, lIndex) => (
+        <div
+          key={lesson.id}
+          onClick={() => {
+            if (!lesson.unlocked) return;
 
-                  setSelectedLesson(lesson);
-                  setQuiz(null);
-                }}
-                style={{
-                  padding: "10px",
-                  margin: "5px 0",
-                  cursor: lesson.unlocked ? "pointer" : "not-allowed",
-                  background:
-                    selectedLesson?.id === lesson.id
-                      ? "#1e293b"
-                      : "transparent",
-                  opacity: lesson.unlocked ? 1 : 0.5,
-                  borderRadius: "8px",
-                }}
-              >
-                {lesson.unlocked ? "▶" : "🔒"} {lesson.title}
-              </div>
-            ))}
-          </div>
-        ))}
+            setSelectedLesson(lesson);
+            setQuiz(null);
+          }}
+          style={{
+            padding: "10px",
+            margin: "5px 0",
+            cursor: lesson.unlocked ? "pointer" : "not-allowed",
+            background:
+              selectedLesson?.id === lesson.id
+                ? "#1e293b"
+                : "transparent",
+            opacity: lesson.unlocked ? 1 : 0.5,
+            borderRadius: "8px",
+          }}
+        >
+          {lesson.unlocked ? "▶" : "🔒"} {lesson.title}
+        </div>
+      ))}
+    </div>
+  ))
+) : (
+  <p style={{ color: "white" }}>
+    🚫 No content available / Please enroll
+  </p>
+)}
       </div>
 
       {/* RIGHT CONTENT */}

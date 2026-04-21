@@ -56,72 +56,62 @@ def get_course_content(
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user)
 ):
-
+    
     user_id = current_user.id
+    print("USER ID 👉", current_user.id)
 
-    # 🔍 GET COURSE
     program = db.query(Program).filter_by(slug=slug).first()
 
     if not program:
-        return {"error": "Course not found"}
+        return []
 
-    # 🔒 CHECK ENROLLMENT (PAYMENT)
     enrollment = db.query(Enrollment).filter_by(
         user_id=user_id,
         program_id=program.id
     ).first()
 
-    if not enrollment or enrollment.status != "active":
-        return {"error": "Please enroll and complete payment"}
+    # 🔒 BLOCK if not enrolled
+    if not enrollment:
+        return {"error": "Please enroll first"}
 
-    # 📦 GET MODULES
     modules = db.query(Module).filter_by(course_id=program.id).all()
 
-    final_data = []
+    result = []
 
     for mod in modules:
-
         lessons = db.query(Lesson).filter_by(module_id=mod.id).all()
 
         lessons_data = []
 
-        for i, lesson in enumerate(lessons):
+        for i, l in enumerate(lessons):
 
-            # 📊 GET USER PROGRESS
             progress = db.query(Progress).filter_by(
                 user_id=user_id,
-                lesson_id=lesson.id
+                lesson_id=l.id
             ).first()
 
-            # 🔓 UNLOCK LOGIC
             if i == 0:
                 unlocked = True
             else:
-                prev_lesson = lessons[i - 1]
-
+                prev = lessons[i-1]
                 prev_progress = db.query(Progress).filter_by(
                     user_id=user_id,
-                    lesson_id=prev_lesson.id
+                    lesson_id=prev.id
                 ).first()
 
-                unlocked = (
-                    prev_progress is not None and
-                    prev_progress.quiz_passed is True
-                )
+                unlocked = prev_progress and prev_progress.quiz_passed
 
             lessons_data.append({
-                "id": lesson.id,
-                "title": lesson.title,
-                "video_url": lesson.video_url,
-                "completed": progress.completed if progress else False,
+                "id": l.id,
+                "title": l.title,
+                "video_url": l.video_url,
                 "quiz_passed": progress.quiz_passed if progress else False,
                 "unlocked": unlocked
             })
 
-        final_data.append({
-            "module_id": mod.id,
+        result.append({
             "module_title": mod.title,
             "lessons": lessons_data
         })
 
-    return final_data
+    return result
