@@ -36,9 +36,19 @@ export const submitQuiz = (quizId, answers) =>
 
 
 // ── Payment ─────────────────────────────────────────────────────
+export const createPaymentOrder = async (courseId) => {
+  const res = await fetch("http://localhost:8001/api/payment/create-order", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      course_id: Number(courseId),
+    }),
+  });
 
-export const createPaymentOrder = (courseId) =>
-  api.post(`/payment/create-order`, { course_id: courseId }).then(r => r.data);
+  return await res.json();
+};
 
 export const verifyPayment = (payload) =>
   api.post(`/payment/verify`, payload).then(r => r.data);

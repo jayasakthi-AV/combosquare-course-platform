@@ -28,7 +28,7 @@ export default function PaymentPage() {
       .then(data => {
         // If already enrolled, skip to player
         if (data.is_enrolled) {
-          navigate(`/learn/${slug}`);
+          navigate(`/learn/${data.slug}`);
           return;
         }
         setCourse(data);
@@ -38,30 +38,52 @@ export default function PaymentPage() {
       })
       .finally(() => setLoading(false));
   }, [slug, navigate]);
-
   const handlePay = async () => {
-    console.log("PAY BUTTON CLICKED"); 
+    console.log("PAY BUTTON CLICKED");
+  
     if (!course) return;
+  
     setPaying(true);
     setError('');
+  
     try {
-      const order = await createPaymentOrder(course.id);
+      // 🔥 STEP 1 — CREATE ORDER
+      const order = await createPaymentOrder(course?.id || 1);
+  
+      console.log("ORDER RESPONSE 👉", order);
+  
+      if (!order || !order.order_id) {
+        throw new Error("Order creation failed");
+      }
+  
+      // 🔥 STEP 2 — CHECK RAZORPAY LOADED
+      if (!window.Razorpay) {
+        throw new Error("Razorpay SDK not loaded");
+      }
+  
+      // 🔥 STEP 3 — OPEN CHECKOUT
       openRazorpayCheckout(
         order,
         user,
         () => {
-          window.location.href = `/${slug}`;
+          console.log("PAYMENT SUCCESS");
+      
+          console.log("COURSE 👉", course);
+      
+          navigate(`/learn/${course.slug || "full-stack-1"}`);// ✅ FINAL FIX
         },
         (err) => {
+          console.log("RAZORPAY ERROR 👉", err);
           setError(err?.message || 'Payment failed. Please try again.');
           setPaying(false);
-        },
+        }
       );
+  
     } catch (err) {
-      setError(err.response?.data?.detail || 'Could not create payment order. Try again.');
+      console.log("PAYMENT ERROR 👉", err);
+      setError(err.message || 'Something went wrong');
       setPaying(false);
     }
-    
   };
 
   const fmt = (paise) => `₹${(paise / 100).toLocaleString('en-IN')}`;

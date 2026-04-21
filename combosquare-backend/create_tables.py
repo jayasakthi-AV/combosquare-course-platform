@@ -8,6 +8,9 @@ from models.lms import (
     Course, Module, Lesson, Quiz, QuizQuestion,
     CourseEnrollment, LessonProgress, Payment, QuizAttempt
 )
+from models.progress import Progress   # 🔥 MUST ADD
+from models.quiz import Quiz
+
 
 
 print("Creating database tables...")

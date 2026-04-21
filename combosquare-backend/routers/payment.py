@@ -5,6 +5,8 @@ import hashlib
 from sqlalchemy.orm import Session
 from database import get_db
 from models.enrollment import Enrollment
+from models.program import Program
+from core.dependencies import get_current_user   # or wherever it is
 
 router = APIRouter()
 
@@ -14,13 +16,24 @@ client = razorpay.Client(auth=(
 ))
 
 
+
+from pydantic import BaseModel
+
+class OrderRequest(BaseModel):
+    course_id: int
+
 @router.post("/create-order")
-def create_order(data: dict):
-    amount = 499
-    program_id = data.get("course_id")
+async def create_order(request: Request):
+    data = await request.json()
+    print("REQUEST DATA:", data)
+
+    course_id = data.get("course_id")
+
+    if not course_id:
+        return {"error": "course_id missing"}
 
     order = client.order.create({
-        "amount": amount * 100,
+        "amount": 499 * 100,
         "currency": "INR",
         "payment_capture": 1
     })
@@ -30,12 +43,14 @@ def create_order(data: dict):
         "amount": order["amount"],
         "currency": order["currency"],
         "order_id": order["id"],
-        "program_id": program_id   # ✅ correct
+        "program_id": course_id
     }
-
-
 @router.post("/verify")
-async def verify(request: Request, db: Session = Depends(get_db)):
+async def verify(
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
     data = await request.json()
 
     generated_signature = hmac.new(
@@ -46,11 +61,8 @@ async def verify(request: Request, db: Session = Depends(get_db)):
 
     if generated_signature == data['razorpay_signature']:
 
-        # ✅ FIXED
-        program_id = int(data.get("program_id"))  # convert to int
-        user_id = 1
-
-        print("PROGRAM ID:", program_id)  # debug
+        program_id = int(data.get("program_id"))
+        user_id = current_user.id   # ✅ FIXED
 
         existing = db.query(Enrollment).filter_by(
             user_id=user_id,
