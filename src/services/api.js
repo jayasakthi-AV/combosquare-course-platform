@@ -1,175 +1,132 @@
-import axios from 'axios';
+import axios from "axios";
 
-// Backend API URL
-const API_URL = 'http://localhost:8001/api';
+// 🔥 FIXED BASE URL (NO /api unless your backend uses it)
+const API_URL = "http://127.0.0.1:8001";
 
-// Create axios instance  ← THIS MUST EXIST
 const api = axios.create({
   baseURL: API_URL,
   headers: {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   },
 });
 
-// Add token to all requests automatically
+// 🔐 Attach token automatically
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('access_token');
+  const token = localStorage.getItem("access_token");
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
 });
 
-// Handle errors globally
+// ❗ Global error handling
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem('access_token');
-      localStorage.removeItem('user');
-      window.location.href = '/login';
+      localStorage.removeItem("access_token");
+      localStorage.removeItem("user");
+      window.location.href = "/login";
     }
     return Promise.reject(error);
   }
 );
 
-// ============= AUTH FUNCTIONS =============
+// ================= AUTH =================
 
 export const signup = async (fullName, email, password, mobile = null) => {
-  try {
-    const response = await api.post('/auth/signup', {
-      full_name: fullName,
-      email: email,
-      password: password,
-      mobile: mobile
-    });
-    localStorage.setItem('access_token', response.data.access_token);
-    localStorage.setItem('user', JSON.stringify(response.data.user));
-    return response.data;
-  } catch (error) {
-    throw error;
-  }
+  const response = await api.post("/auth/signup", {
+    full_name: fullName,
+    email,
+    password,
+    mobile,
+  });
+  localStorage.setItem("access_token", response.data.access_token);
+  localStorage.setItem("user", JSON.stringify(response.data.user));
+  return response.data;
 };
 
 export const login = async (email, password) => {
-  try {
-    const response = await api.post('/auth/login', {
-      email: email,
-      password: password
-    });
-    localStorage.setItem('access_token', response.data.access_token);
-    localStorage.setItem('user', JSON.stringify(response.data.user));
-    return response.data;
-  } catch (error) {
-    throw error;
-  }
+  const response = await api.post("/auth/login", {
+    email,
+    password,
+  });
+  localStorage.setItem("access_token", response.data.access_token);
+  localStorage.setItem("user", JSON.stringify(response.data.user));
+  return response.data;
 };
 
 export const getCurrentUser = async () => {
-  try {
-    const response = await api.get('/auth/me');
-    localStorage.setItem('user', JSON.stringify(response.data));
-    return response.data;
-  } catch (error) {
-    throw error;
-  }
+  const response = await api.get("/auth/me");
+  localStorage.setItem("user", JSON.stringify(response.data));
+  return response.data;
 };
 
 export const logout = () => {
-  localStorage.removeItem('access_token');
-  localStorage.removeItem('user');
-  window.location.href = '/login';
+  localStorage.removeItem("access_token");
+  localStorage.removeItem("user");
+  window.location.href = "/login";
 };
 
 export const isLoggedIn = () => {
-  return localStorage.getItem('access_token') !== null;
+  return localStorage.getItem("access_token") !== null;
 };
 
 export const getUser = () => {
-  const userStr = localStorage.getItem('user');
+  const userStr = localStorage.getItem("user");
   return userStr ? JSON.parse(userStr) : null;
 };
 
 export const getToken = () => {
-  return localStorage.getItem('access_token');
+  return localStorage.getItem("access_token");
 };
 
-// ============= DASHBOARD FUNCTIONS =============
+// ================= DASHBOARD =================
 
 export const getStudentDashboard = async () => {
-  try {
-    const response = await api.get('/dashboard/me');
-    return response.data;
-  } catch (error) {
-    throw error;
-  }
+  const response = await api.get("/dashboard/me");
+  return response.data;
 };
 
 export const getAvailablePrograms = async () => {
-  try {
-    const response = await api.get('/dashboard/available-programs');
-    return response.data;
-  } catch (error) {
-    throw error;
-  }
+  const response = await api.get("/dashboard/available-programs");
+  return response.data;
 };
 
 export const enrollInProgram = async (programId) => {
-  try {
-    const response = await api.post('/enrollments/', {
-      program_id: programId
-    });
-    return response.data;
-  } catch (error) {
-    throw error;
-  }
+  const response = await api.post("/enrollments/", {
+    program_id: programId,
+  });
+  return response.data;
 };
 
 export const updateProgress = async (enrollmentId, progress) => {
-  try {
-    const response = await api.put(`/enrollments/${enrollmentId}/progress`, {
-      progress: progress
-    });
-    return response.data;
-  } catch (error) {
-    throw error;
-  }
+  const response = await api.put(`/enrollments/${enrollmentId}/progress`, {
+    progress,
+  });
+  return response.data;
 };
 
+// ================= ADMIN =================
+
 export const getAdminStats = async () => {
-  try {
-    const response = await api.get('/admin/stats');
-    return response.data;
-  } catch (error) {
-    throw error;
-  }
+  const response = await api.get("/admin/stats");
+  return response.data;
 };
 
 export const getAllUsers = async () => {
-  try {
-    const response = await api.get('/admin/users');
-    return response.data;
-  } catch (error) {
-    throw error;
-  }
+  const response = await api.get("/admin/users");
+  return response.data;
 };
 
 export const getAllEnrollments = async () => {
-  try {
-    const response = await api.get('/admin/enrollments');
-    return response.data;
-  } catch (error) {
-    throw error;
-  }
+  const response = await api.get("/admin/enrollments");
+  return response.data;
 };
 
 export const getAllContacts = async () => {
-  try {
-    const response = await api.get('/admin/contacts');
-    return response.data;
-  } catch (error) {
-    throw error;
-  }
+  const response = await api.get("/admin/contacts");
+  return response.data;
 };
 
 export default api;

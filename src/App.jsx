@@ -9,6 +9,7 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import DomainPage from "./pages/DomainPage";
 import ProgramPage from "./pages/ProgramPage";
+import Payment from "./pages/Payment";
 import CareerPage from "./pages/CareerPage";
 import StudentDashboard from "./pages/StudentDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
@@ -23,6 +24,11 @@ export default function App() {
     <div className="min-h-screen bg-white text-csDark">
       <Navbar />
       <div className={noPaddingPages.some(p => location.pathname.startsWith(p)) ? "" : "pt-24 px-6"}>
+        <Route path="/payment/:programId" element={
+  <ProtectedRoute>
+    <Payment />
+  </ProtectedRoute>
+} />
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/domains/:domainId" element={<DomainPage />} />

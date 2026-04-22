@@ -1,19 +1,21 @@
 # routers/contact.py
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from sqlalchemy.orm import Session
 from typing import List
 from database import get_db
 from models.contact import ContactSubmission
 from schemas.contact import ContactCreate, ContactResponse
 from core.dependencies import get_current_admin
+from services.email_service import send_contact_email
 
 router = APIRouter(prefix="/api/contact", tags=["Contact"])
 
 
 # ─── Submit Contact Form (Public) ─────────────────────────────
-@router.post("/", response_model=ContactResponse, status_code=201)
+@router.post("/", status_code=201)
 def submit_contact(
     data: ContactCreate,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db)
 ):
     """Public endpoint — submit a contact form message"""
@@ -26,7 +28,17 @@ def submit_contact(
     db.add(submission)
     db.commit()
     db.refresh(submission)
-    return ContactResponse.model_validate(submission)
+
+    # Send email notification in the background (won't block the response)
+    background_tasks.add_task(
+        send_contact_email,
+        name=data.name,
+        email=data.email,
+        mobile=data.mobile,
+        message=data.message
+    )
+
+    return {"message": "Message sent successfully"}
 
 
 # ─── Admin: Get All Submissions ───────────────────────────────
