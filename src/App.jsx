@@ -26,13 +26,11 @@ export default function App() {
   return (
     <div className="min-h-screen bg-white text-csDark">
       <Navbar />
+
       <div className={noPaddingPages.some(p => location.pathname.startsWith(p)) ? "" : "pt-24 px-6"}>
-        <Route path="/payment/:programId" element={
-  <ProtectedRoute>
-    <Payment />
-  </ProtectedRoute>
-} />
+        
         <Routes>
+
           <Route path="/" element={<Home />} />
           <Route path="/domains/:domainId" element={<DomainPage />} />
           <Route path="/program/:programId" element={<ProgramPage />} />
@@ -43,9 +41,26 @@ export default function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/learn/:slug" element={<LearnPage />} />
-          <Route path="/pay/:slug"   element={<ProtectedRoute><PaymentPage /></ProtectedRoute>} />
-// <Route path="/learn/:slug" element={<ProtectedRoute><CoursePlayer /></ProtectedRoute>} />
 
+          {/* ✅ FIXED: moved inside Routes */}
+          <Route path="/payment/:programId" element={
+            <ProtectedRoute>
+              <Payment />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/pay/:slug" element={
+            <ProtectedRoute>
+              <PaymentPage />
+            </ProtectedRoute>
+          } />
+
+          {/* Optional */}
+          {/* <Route path="/learn/:slug" element={
+            <ProtectedRoute>
+              <CoursePlayer />
+            </ProtectedRoute>
+          } /> */}
 
           <Route path="/dashboard" element={
             <ProtectedRoute>

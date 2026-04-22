@@ -1,27 +1,28 @@
-# requirements.txt — full LMS version
+# Core backend
 fastapi==0.109.0
 uvicorn==0.27.0
 sqlalchemy==2.0.25
-<<<<<<< HEAD
+
+# Database
 psycopg2-binary==2.9.10
-pydantic[email]>=2.5.0
-=======
-psycopg2-binary==2.9.9
+
+# Validation & settings
 pydantic[email]==2.5.3
 pydantic-settings==2.1.0
->>>>>>> f700401b282d94970f741a5fe852d1ba4888c410
+python-dotenv==1.0.0
+
+# Authentication & security
 passlib==1.7.4
 bcrypt==4.1.2
 python-jose[cryptography]==3.3.0
-python-multipart==0.0.6
-<<<<<<< HEAD
-pydantic-settings==2.1.0
-python-dotenv==1.0.0
-=======
 
-# ── NEW for LMS ──
-razorpay==1.4.1          # Razorpay payment gateway
-reportlab==4.1.0         # PDF certificate generation
-aiofiles==23.2.1         # async file serving (optional, for uploads)
-boto3==1.34.0            # AWS S3 for video/certificate storage (optional)
->>>>>>> f700401b282d94970f741a5fe852d1ba4888c410
+# File handling
+python-multipart==0.0.6
+aiofiles==23.2.1
+
+# Payments & LMS features
+razorpay==1.4.1
+reportlab==4.1.0
+
+# Optional cloud storage
+boto3==1.34.0
