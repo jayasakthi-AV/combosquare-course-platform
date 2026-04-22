@@ -20,6 +20,7 @@ import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import Footer from "../components/home/Footer";
 import { enrollInProgram, isLoggedIn, getStudentDashboard } from "../services/api";
+import { getCourseBySlug } from "../services/lmsApi";
 
 function useTypingEffect(text, speed = 50) {
   const [displayedText, setDisplayedText] = useState("");
@@ -57,11 +58,18 @@ export default function ProgramPage() {
     const checkEnrollment = async () => {
       if (!isLoggedIn()) return;
       try {
-        const data = await getStudentDashboard();
-        const alreadyEnrolled = data.enrolled_programs?.some(
-          (p) => p.slug === programId
-        );
-        setIsEnrolled(alreadyEnrolled);
+        useEffect(() => {
+          const fetchCourse = async () => {
+            try {
+              const data = await getCourseBySlug(programId);
+              setIsEnrolled(data.is_enrolled);
+            } catch (err) {
+              console.log("Error fetching course", err);
+            }
+          };
+        
+          fetchCourse();
+        }, [programId]);
       } catch (err) {
         // not logged in or error — ignore
       }
@@ -69,33 +77,11 @@ export default function ProgramPage() {
     checkEnrollment();
   }, [programId]);
 
-  const handleEnroll = async () => {
-    // Not logged in — redirect to login
-    if (!isLoggedIn()) {
-      navigate("/login");
-      return;
-    }
-
-    // Already enrolled — go to dashboard
+  const handleEnroll = () => {
     if (isEnrolled) {
-      navigate("/dashboard");
-      return;
-    }
-
-    try {
-      setEnrolling(true);
-      // Find program ID from slug using programs API
-      const response = await fetch(`http://localhost:8001/api/programs/${programId}`);
-      const programData = await response.json();
-      await enrollInProgram(programData.id);
-      setIsEnrolled(true);
-      setEnrollMessage("Successfully enrolled! Redirecting to dashboard...");
-      setTimeout(() => navigate("/dashboard"), 1500);
-    } catch (err) {
-      const msg = err.response?.data?.detail || "Enrollment failed. Please try again.";
-      setEnrollMessage(msg);
-    } finally {
-      setEnrolling(false);
+      navigate(`/learn/${programId}`);
+    } else {
+      navigate(`/pay/${programId}`);
     }
   };
 
@@ -182,7 +168,11 @@ export default function ProgramPage() {
               {/* ── Enroll Now Button ── */}
               <motion.button
                 whileHover={{ scale: 1.05, y: -2 }}
-                onClick={handleEnroll}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleEnroll();
+                }}
                 disabled={enrolling}
                 className={`px-8 py-3 font-bold rounded-full flex items-center gap-2 transition ${
                   isEnrolled

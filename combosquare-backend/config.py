@@ -18,6 +18,7 @@ class Settings(BaseSettings):
     ADMIN_EMAIL: str = "admin@combosquare.com"
     ADMIN_PASSWORD: str = "Admin@123"
 
+<<<<<<< HEAD
     # Email / SMTP
     SMTP_SERVER: str = "smtp.gmail.com"
     SMTP_PORT: int = 587
@@ -31,5 +32,14 @@ class Settings(BaseSettings):
         case_sensitive=True,
     )
 
+=======
+   # RAZORPAY_KEY_SECRET=your_secret_here
+    RAZORPAY_KEY_ID    : str = ""
+    RAZORPAY_KEY_SECRET: str = ""
+
+    class Config:
+        env_file = ".env"
+        case_sensitive = True
+>>>>>>> f700401b282d94970f741a5fe852d1ba4888c410
 
 settings = Settings()
