@@ -1,6 +1,7 @@
 // src/pages/AdminDashboard.jsx
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import CourseManager from "./CourseManager";
 import {
   getAdminStats,
   getAllUsers,
@@ -119,6 +120,7 @@ export default function AdminDashboard() {
               { id: "users", label: "Users", icon: "👥", badge: users.length },
               { id: "enrollments", label: "Enrollments", icon: "📚", badge: enrollments.length },
               { id: "contacts", label: "Messages", icon: "📬", badge: stats?.unread_contacts || 0 },
+              { id: "courses", label: "Courses", icon: "🎥", badge: null },
             ].map((item) => (
               <button
                 key={item.id}
@@ -167,6 +169,9 @@ export default function AdminDashboard() {
       <div className="ml-64 flex-1 p-8">
 
         {/* ── Overview Tab ── */}
+        {activeTab === "courses" && (
+  <CourseManager />
+)}
         {activeTab === "overview" && (
           <div>
             <h1 className="text-2xl font-bold text-gray-800 mb-2">Admin Dashboard</h1>

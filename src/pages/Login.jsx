@@ -28,6 +28,7 @@ export default function Login() {
 
     try {
       const response = await login(formData.email, formData.password);
+      localStorage.setItem("token", response.access_token);
       console.log("Login successful:", response.user);
       
       // Redirect based on role

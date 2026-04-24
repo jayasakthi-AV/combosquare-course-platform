@@ -22,6 +22,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import Footer from "../components/home/Footer";
 import { enrollInProgram, isLoggedIn, getStudentDashboard } from "../services/api";
+import { getCourseBySlug } from "../services/lmsApi";
 
 export default function ProgramPage() {
   const { programId } = useParams();
@@ -44,28 +45,31 @@ export default function ProgramPage() {
     const checkEnrollment = async () => {
       if (!isLoggedIn()) return;
       try {
-        const data = await getStudentDashboard();
-        const alreadyEnrolled = data.enrolled_programs?.some((p) => p.slug === programId);
-        setIsEnrolled(alreadyEnrolled);
-      } catch (err) { /* Silent ignore */ }
+        useEffect(() => {
+          const fetchCourse = async () => {
+            try {
+              const data = await getCourseBySlug(programId);
+              setIsEnrolled(data.is_enrolled);
+            } catch (err) {
+              console.log("Error fetching course", err);
+            }
+          };
+        
+          fetchCourse();
+        }, [programId]);
+      } catch (err) {
+        // not logged in or error — ignore
+      }
     };
     checkEnrollment();
   }, [programId]);
 
-  const handleEnroll = async () => {
-    if (!isLoggedIn()) { navigate("/login"); return; }
-    if (isEnrolled) { navigate("/dashboard"); return; }
-    try {
-      setEnrolling(true);
-      const response = await fetch(`http://localhost:8001/api/programs/${programId}`);
-      const pData = await response.json();
-      await enrollInProgram(pData.id);
-      setIsEnrolled(true);
-      setEnrollMessage("Successfully enrolled! Redirecting to dashboard...");
-      setTimeout(() => navigate("/dashboard"), 1500);
-    } catch (err) {
-      setEnrollMessage(err.response?.data?.detail || "Enrollment failed. Please try again.");
-    } finally { setEnrolling(false); }
+  const handleEnroll = () => {
+    if (isEnrolled) {
+      navigate(`/learn/${programId}`);
+    } else {
+      navigate(`/pay/${programId}`);
+    }
   };
 
   if (!program) {
@@ -131,14 +135,41 @@ export default function ProgramPage() {
               ))}
             </motion.div>
 
-            <motion.div variants={animFadeUp} initial="hidden" animate="visible" transition={{ delay: 0.4 }} className="flex flex-wrap gap-5">
-              <button onClick={handleEnroll} disabled={enrolling} className={`px-10 py-5 font-black rounded-2xl flex items-center gap-3 shadow-2xl uppercase tracking-widest text-lg transition-all hover:-translate-y-1 ${isEnrolled ? "bg-emerald-500 text-white" : "bg-white text-[#471088] hover:bg-purple-50"}`}>
-                {isEnrolled ? "Access Dashboard" : "Enroll Now"} <ArrowRight className="w-5 h-5" />
-              </button>
-              <button className="px-10 py-5 border-2 border-white/20 rounded-2xl font-black uppercase tracking-widest text-lg hover:bg-white/10 transition-all flex items-center gap-3">
-                Curriculum <Download className="w-5 h-5" />
-              </button>
-            </motion.div>
+            {/* Enroll message */}
+            {enrollMessage && (
+              <div className={`mt-4 p-3 rounded-xl text-sm font-medium ${
+                isEnrolled ? "bg-green-500/20 text-green-200" : "bg-red-500/20 text-red-200"
+              }`}>
+                {enrollMessage}
+              </div>
+            )}
+
+            <div className="mt-8 flex flex-wrap gap-4">
+              {/* ── Enroll Now Button ── */}
+              <motion.button
+                whileHover={{ scale: 1.05, y: -2 }}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleEnroll();
+                }}
+                disabled={enrolling}
+                className={`px-8 py-3 font-bold rounded-full flex items-center gap-2 transition ${
+                  isEnrolled
+                    ? "bg-green-400 text-white"
+                    : "bg-white text-purple-700 hover:bg-purple-100"
+                } disabled:opacity-50`}
+              >
+                {enrollBtnLabel()} <ArrowRight className="w-5 h-5" />
+              </motion.button>
+
+              <motion.button
+                whileHover={{ scale: 1.03 }}
+                className="px-8 py-3 border border-white rounded-full hover:bg-white hover:text-purple-700"
+              >
+                Download Curriculum
+              </motion.button>
+            </div>
           </div>
 
           <div className="lg:col-span-5 flex justify-center lg:justify-end">

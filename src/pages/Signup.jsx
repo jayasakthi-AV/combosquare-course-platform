@@ -41,14 +41,19 @@ export default function Signup() {
         formData.password,
         formData.mobile || null
       );
+    
       console.log("Signup successful:", response.user);
-      
-      // New users are always students
+    
+      // ✅ already stored in api.js, but safe to keep
+      localStorage.setItem("access_token", response.access_token);
+      localStorage.setItem("user", JSON.stringify(response.user));
+    
       navigate("/dashboard");
-      
+    
     } catch (err) {
       console.error("Signup error:", err);
-      const errorMessage = err.response?.data?.detail || "Signup failed. Please try again.";
+      const errorMessage =
+        err.response?.data?.detail || "Signup failed. Please try again.";
       setError(errorMessage);
     } finally {
       setLoading(false);

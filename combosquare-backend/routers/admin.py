@@ -12,6 +12,9 @@ from schemas.user import UserResponse
 from schemas.enrollment import EnrollmentResponse
 from schemas.contact import ContactResponse
 from core.dependencies import get_current_admin
+from models.program import Program   # ✅ instead of Course
+from models.module import Module
+from models.lesson import Lesson
 
 router = APIRouter(prefix="/api/admin", tags=["Admin Dashboard"])
 
@@ -158,3 +161,75 @@ def make_admin(
     db.commit()
     db.refresh(user)
     return UserResponse.model_validate(user)
+
+@router.post("/course")
+def create_course(data: dict, db: Session = Depends(get_db)):
+
+    existing = db.query(Program).filter_by(slug=data["slug"]).first()
+
+    if existing:
+        return {"error": "Course with this slug already exists"}
+
+    course = Program(
+        title=data["title"],
+        slug=data["slug"],
+        price=data["price"]
+    )
+
+    db.add(course)
+    db.commit()
+
+    return {"message": "Course created"}
+
+@router.post("/module")
+def create_module(data: dict, db: Session = Depends(get_db)):
+    module = Module(
+        title=data["title"],
+        course_id=data["course_id"]
+    )
+    db.add(module)
+    db.commit()
+    return {"message": "Module created"}
+
+@router.post("/lesson")
+def create_lesson(data: dict, db: Session = Depends(get_db)):
+    lesson = Lesson(
+        title=data["title"],
+        video_url=data["video_url"],  # 🔥 YouTube link
+        module_id=data["module_id"]
+    )
+    db.add(lesson)
+    db.commit()
+    return {"message": "Lesson created"}
+
+from models.quiz import Quiz
+from pydantic import BaseModel
+
+# 🔥 REQUEST BODY
+class QuizCreate(BaseModel):
+    lesson_id: int
+    question: str
+    option1: str
+    option2: str
+    option3: str
+    option4: str
+    answer: str
+
+
+# 🔥 CREATE QUIZ API
+@router.post("/quiz")
+def create_quiz(data: QuizCreate, db: Session = Depends(get_db)):
+    quiz = Quiz(
+        lesson_id=data.lesson_id,
+        question=data.question,
+        option1=data.option1,
+        option2=data.option2,
+        option3=data.option3,
+        option4=data.option4,
+        answer=data.answer
+    )
+
+    db.add(quiz)
+    db.commit()
+
+    return {"message": "Quiz created successfully"}
