@@ -1,5 +1,5 @@
 import Navbar from "./components/layout/Navbar";
-import { Routes, Route, useLocation } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 
 import Home from "./pages/Home";
 import Programs from "./pages/Programs";
@@ -16,13 +16,16 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import AdminRoute from "./components/AdminRoute";
 
 export default function App() {
-  const location = useLocation();
-  const noPaddingPages = ["/login", "/signup", "/dashboard", "/admin"];
-
   return (
-    <div className="min-h-screen bg-white text-csDark">
+    <div className="min-h-screen bg-[#fcfcfd] text-gray-900 flex flex-col w-full overflow-hidden">
       <Navbar />
-      <div className={noPaddingPages.some(p => location.pathname.startsWith(p)) ? "" : "pt-24 px-6"}>
+      
+      {/* ─── MASSIVE FIX: ZERO GLOBAL PADDING ─── */}
+      {/* Removed all conditional logic and pt-24. 
+        This wrapper is now 100% full-bleed and invisible. 
+        Your dark pages will now snap perfectly to the bottom of the Navbar.
+      */}
+      <div className="w-full flex-1 flex flex-col">
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/domains/:domainId" element={<DomainPage />} />
@@ -45,7 +48,6 @@ export default function App() {
               <AdminDashboard />
             </AdminRoute>
           } />
-
         </Routes>
       </div>
     </div>
