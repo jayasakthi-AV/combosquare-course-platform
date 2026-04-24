@@ -21,44 +21,42 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Footer from "../components/home/Footer";
-import { enrollInProgram, isLoggedIn, getStudentDashboard } from "../services/api";
+import { isLoggedIn } from "../services/api";
 import { getCourseBySlug } from "../services/lmsApi";
 
 export default function ProgramPage() {
   const { programId } = useParams();
   const program = programData[programId];
   const navigate = useNavigate();
-  const [openModule, setOpenModule] = useState(0); // Default first module open
-  const [activeTestimonial, setActiveTestimonial] = useState(0);
-
+  const [openModule, setOpenModule] = useState(0);
+  
   // Enrollment states
   const [enrolling, setEnrolling] = useState(false);
   const [isEnrolled, setIsEnrolled] = useState(false);
   const [enrollMessage, setEnrollMessage] = useState("");
 
+  // ── FIX 1: RESTORE THE MISSING FUNCTION ──
+  const enrollBtnLabel = () => {
+    if (enrolling) return "Processing...";
+    if (isEnrolled) return "Go to Learning Path →";
+    if (!isLoggedIn()) return "Login to Access";
+    return "Enroll in Program";
+  };
+
+  // Scroll to top on load
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "instant" });
   }, [programId]);
 
-  // Check enrollment status
+  // ── FIX 2: CLEANED UP ENROLLMENT CHECK ──
   useEffect(() => {
     const checkEnrollment = async () => {
       if (!isLoggedIn()) return;
       try {
-        useEffect(() => {
-          const fetchCourse = async () => {
-            try {
-              const data = await getCourseBySlug(programId);
-              setIsEnrolled(data.is_enrolled);
-            } catch (err) {
-              console.log("Error fetching course", err);
-            }
-          };
-        
-          fetchCourse();
-        }, [programId]);
+        const data = await getCourseBySlug(programId);
+        setIsEnrolled(data.is_enrolled);
       } catch (err) {
-        // not logged in or error — ignore
+        console.log("Error fetching enrollment status", err);
       }
     };
     checkEnrollment();
@@ -85,14 +83,8 @@ export default function ProgramPage() {
 
   const learningJourney = [
     { label: "Phase 01", title: "Strong Foundations", desc: "Master core principles step-by-step, engineered for absolute beginners.", Icon: Clock },
-    { label: "Phase 02", title: "Hands-on Practice", desc: "Apply logic with complex coding labs and industry-standard tasks.", Icon: Target },
+    { label: "Phase 02", title: "Hands-on Practice", desc: "Apply logic with coding labs and industry-standard tasks.", Icon: Target },
     { label: "Phase 03", title: "Real Architecture", desc: "Build and deploy job-ready, full-scale projects for your portfolio.", Icon: Trophy },
-  ];
-
-  const testimonials = [
-    { name: "Harini", role: "Final Year – CSBS", feedback: "Before this program I was scared of projects. Now I have a complete portfolio and feel confident for internships.", image: "https://i.postimg.cc/pdQm4Vnb/woman-1.jpg" },
-    { name: "Vignesh", role: "Junior Developer Intern", feedback: "The roadmap and practice tasks helped me understand exactly what to learn next. It felt very structured and practical.", image: "https://i.postimg.cc/6Q5zVt0M/man-2.jpg" },
-    { name: "Sangeetha", role: "2nd Year Student", feedback: "The real-world examples made learning simple. The projects gave me something strong to show in my resume.", image: "https://i.postimg.cc/fTZXbn3L/woman-3.jpg" },
   ];
 
   const animFadeUp = {
@@ -108,7 +100,6 @@ export default function ProgramPage() {
         <div className="absolute inset-0 z-0">
           <div className="absolute inset-0 opacity-[0.05]" style={{ backgroundImage: `radial-gradient(circle at 2px 2px, white 1px, transparent 0)`, backgroundSize: '40px 40px' }}></div>
           <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-[#471088] blur-[150px] rounded-full opacity-40 animate-pulse" />
-          <div className="absolute bottom-[-100px] left-[-100px] w-[500px] h-[500px] bg-indigo-600/20 blur-[130px] rounded-full opacity-30" />
         </div>
 
         <div className="relative z-10 max-w-[1500px] mx-auto px-6 sm:px-12 lg:px-16 grid lg:grid-cols-12 gap-16 items-center">
@@ -135,96 +126,58 @@ export default function ProgramPage() {
               ))}
             </motion.div>
 
-            {/* Enroll message */}
-            {enrollMessage && (
-              <div className={`mt-4 p-3 rounded-xl text-sm font-medium ${
-                isEnrolled ? "bg-green-500/20 text-green-200" : "bg-red-500/20 text-red-200"
-              }`}>
-                {enrollMessage}
-              </div>
-            )}
-
             <div className="mt-8 flex flex-wrap gap-4">
-              {/* ── Enroll Now Button ── */}
               <motion.button
                 whileHover={{ scale: 1.05, y: -2 }}
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  handleEnroll();
-                }}
+                onClick={handleEnroll}
                 disabled={enrolling}
-                className={`px-8 py-3 font-bold rounded-full flex items-center gap-2 transition ${
+                className={`px-10 py-4 font-black rounded-2xl flex items-center gap-3 transition-all shadow-2xl uppercase tracking-widest text-lg ${
                   isEnrolled
-                    ? "bg-green-400 text-white"
-                    : "bg-white text-purple-700 hover:bg-purple-100"
+                    ? "bg-emerald-500 text-white"
+                    : "bg-white text-[#471088] hover:bg-purple-100"
                 } disabled:opacity-50`}
               >
                 {enrollBtnLabel()} <ArrowRight className="w-5 h-5" />
               </motion.button>
 
-              <motion.button
-                whileHover={{ scale: 1.03 }}
-                className="px-8 py-3 border border-white rounded-full hover:bg-white hover:text-purple-700"
-              >
+              <button className="px-10 py-4 border-2 border-white/20 rounded-2xl font-black uppercase tracking-widest text-lg hover:bg-white/10 transition-all">
                 Download Curriculum
-              </motion.button>
+              </button>
             </div>
           </div>
 
           <div className="lg:col-span-5 flex justify-center lg:justify-end">
             <motion.div variants={animFadeUp} initial="hidden" animate="visible" transition={{ delay: 0.5 }} className="relative group">
-              <div className="absolute inset-0 rounded-[3rem] bg-gradient-to-br from-[#471088] to-indigo-500 blur-3xl opacity-40 animate-pulse" />
+              <div className="absolute inset-0 rounded-[3rem] bg-[#471088] blur-3xl opacity-40 animate-pulse" />
               <div className="relative bg-white/5 backdrop-blur-3xl border border-white/20 rounded-[3.5rem] p-6 shadow-2xl">
                 <img src={program.heroImg} alt={program.title} className="w-full max-w-[380px] rounded-[2.5rem] object-contain mx-auto" />
-                <div className="absolute top-6 right-6 bg-white/10 backdrop-blur-md p-3 rounded-2xl border border-white/20"><Zap className="w-6 h-6 text-yellow-300" /></div>
               </div>
             </motion.div>
           </div>
         </div>
       </section>
 
-      {/* ─── WHY THIS PROGRAM ─── */}
-      <section className="py-32 bg-white">
-        <div className="max-w-[1500px] mx-auto px-6 lg:px-16">
-          <div className="text-center mb-20">
-            <p className="text-[#471088] font-black uppercase tracking-[0.25em] text-sm mb-4">Strategic Advantage</p>
-            <h2 className="text-4xl sm:text-6xl font-black text-gray-900 tracking-tighter">Why choose <span className="text-[#471088]">this track?</span></h2>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {program.highlights?.map((h, i) => (
-              <motion.div key={i} whileHover={{ y: -10 }} className="bg-[#f8f9ff] p-10 rounded-[2.5rem] border border-gray-100 hover:border-[#471088]/20 transition-all group">
-                <div className="w-16 h-16 rounded-2xl bg-white shadow-sm flex items-center justify-center mb-8 group-hover:bg-[#471088] transition-colors duration-500">
-                  <CheckCircle className="w-8 h-8 text-[#471088] group-hover:text-white" />
-                </div>
-                <p className="text-gray-800 font-black text-xl leading-snug">{h}</p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ─── CURRICULUM SECTION ─── */}
-      <section className="py-32 bg-[#fcfcfd] border-y border-gray-100">
+      {/* ─── CURRICULUM ARCHITECTURE ─── */}
+      <section className="py-32 bg-[#fcfcfd]">
         <div className="max-w-4xl mx-auto px-6">
           <h2 className="text-4xl font-black text-gray-900 mb-16 text-center tracking-tight">Curriculum Architecture</h2>
           <div className="space-y-4">
             {program.curriculum?.map((mod, idx) => (
-              <div key={idx} className={`rounded-[2rem] border transition-all duration-500 ${openModule === idx ? "bg-white border-[#471088]/30 shadow-xl" : "bg-white border-gray-100 hover:border-[#471088]/20"}`}>
-                <button className="w-full flex justify-between items-center p-6 sm:p-8 text-left" onClick={() => setOpenModule(openModule === idx ? null : idx)}>
+              <div key={idx} className={`rounded-[2rem] border transition-all duration-500 ${openModule === idx ? "bg-white border-[#471088]/30 shadow-xl" : "bg-white border-gray-100"}`}>
+                <button className="w-full flex justify-between items-center p-8 text-left" onClick={() => setOpenModule(openModule === idx ? null : idx)}>
                   <div className="flex items-center gap-6">
-                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-black text-xl transition-all ${openModule === idx ? "bg-[#471088] text-white shadow-lg shadow-[#471088]/30" : "bg-gray-50 text-gray-400"}`}>
+                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-black text-xl ${openModule === idx ? "bg-[#471088] text-white" : "bg-gray-50 text-gray-400"}`}>
                       {idx + 1 < 10 ? `0${idx + 1}` : idx + 1}
                     </div>
                     <span className="text-xl font-black text-gray-900 tracking-tight">{mod}</span>
                   </div>
-                  <ChevronDown className={`w-6 h-6 text-gray-400 transition-transform duration-500 ${openModule === idx ? "rotate-180 text-[#471088]" : ""}`} />
+                  <ChevronDown className={`w-6 h-6 transition-transform duration-500 ${openModule === idx ? "rotate-180 text-[#471088]" : ""}`} />
                 </button>
                 <AnimatePresence>
                   {openModule === idx && (
                     <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
-                      <div className="px-8 pb-8 pt-2 ml-14 text-gray-500 font-medium leading-relaxed border-t border-gray-50 mt-2 italic">
-                        Comprehensive deep-dive featuring hands-on laboratories, real-world architectural patterns, and mentor-guided milestone projects.
+                      <div className="px-8 pb-8 pt-2 ml-14 text-gray-500 font-medium italic border-t border-gray-50 mt-2">
+                        Comprehensive deep-dive featuring industry-standard labs and mentor-guided milestone projects.
                       </div>
                     </motion.div>
                   )}
@@ -235,62 +188,42 @@ export default function ProgramPage() {
         </div>
       </section>
 
-      {/* ─── LEARNING JOURNEY ─── */}
-      <section className="max-w-[1500px] mx-auto px-6 lg:px-16 py-32">
-        <div className="flex flex-col lg:flex-row gap-20">
-          <div className="lg:w-1/2">
-            <p className="text-[#471088] font-black uppercase tracking-[0.25em] text-sm mb-4">Strategic Roadmap</p>
-            <h2 className="text-4xl sm:text-6xl font-black text-gray-900 tracking-tighter mb-8 leading-[1.1]">The Evolution <br/> of a <span className="text-[#471088]">Specialist.</span></h2>
-            <p className="text-gray-500 text-xl font-medium leading-relaxed max-w-lg mb-12">A structured learning path designed to bridge the gap between academic theory and industry architecture.</p>
-            <div className="p-8 rounded-[3rem] bg-[#0f111a] text-white shadow-2xl relative overflow-hidden">
-               <Globe className="absolute -bottom-10 -right-10 w-40 h-40 opacity-10" />
-               <p className="text-purple-300 font-bold mb-4 uppercase tracking-widest text-xs">Standard included</p>
-               <h4 className="text-2xl font-black mb-4 italic">Global Career Access</h4>
-               <p className="text-gray-400 text-sm leading-relaxed">Our certificates are verified and recognized by partners across India and beyond.</p>
-            </div>
-          </div>
-          <div className="lg:w-1/2 relative">
-             <div className="absolute left-6 top-0 bottom-0 w-1 bg-gradient-to-b from-[#471088] via-[#7b2cbf] to-transparent rounded-full" />
-             <div className="space-y-16 relative">
-                {learningJourney.map((step, idx) => (
-                  <motion.div key={idx} whileInView={{ opacity: 1, x: 0 }} initial={{ opacity: 0, x: 20 }} className="flex gap-10 items-start">
-                    <div className="flex-shrink-0 w-12 h-12 rounded-2xl bg-white shadow-xl border-4 border-[#fcfcfd] flex items-center justify-center z-10">
-                      <step.Icon className="w-5 h-5 text-[#471088]" />
-                    </div>
-                    <div className="bg-white p-8 rounded-[2.5rem] shadow-xl border border-gray-100 flex-1 hover:border-[#471088]/20 transition-all">
-                      <p className="text-[10px] font-black uppercase tracking-widest text-[#471088] mb-2">{step.label}</p>
-                      <h3 className="text-2xl font-black text-gray-900 mb-3">{step.title}</h3>
-                      <p className="text-gray-500 font-medium leading-relaxed">{step.desc}</p>
-                    </div>
-                  </motion.div>
-                ))}
-             </div>
-          </div>
+      {/* ─── JOURNEY PHASE ─── */}
+      <section className="max-w-[1500px] mx-auto px-6 lg:px-16 py-32 bg-[#f8f9ff] rounded-[4rem] mb-20">
+        <h2 className="text-4xl sm:text-6xl font-black text-gray-900 mb-16 text-center tracking-tighter">Your Strategic Journey</h2>
+        <div className="grid lg:grid-cols-3 gap-8">
+           {learningJourney.map((step, idx) => (
+              <motion.div key={idx} whileHover={{ y: -10 }} className="bg-white p-10 rounded-[2.5rem] shadow-xl border border-gray-100">
+                <div className="w-16 h-16 rounded-2xl bg-[#471088] text-white flex items-center justify-center mb-8 shadow-lg">
+                   <step.Icon className="w-8 h-8" />
+                </div>
+                <p className="text-[11px] font-black uppercase tracking-widest text-[#471088] mb-2">{step.label}</p>
+                <h3 className="text-2xl font-black text-gray-900 mb-4">{step.title}</h3>
+                <p className="text-gray-500 font-medium leading-relaxed">{step.desc}</p>
+              </motion.div>
+           ))}
         </div>
       </section>
 
-      {/* ─── TOOLS & PROJECTS ─── */}
+      {/* ─── ECOSYSTEM & PROJECTS ─── */}
       <section className="py-32 bg-gray-900 text-white">
         <div className="max-w-[1500px] mx-auto px-6 lg:px-16 text-center">
-          <h2 className="text-4xl font-black mb-20 tracking-tight">Industry Ecosystem & Architecture</h2>
+          <h2 className="text-4xl font-black mb-20 tracking-tight">Industry Ecosystem</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6 mb-32">
             {program.tools?.map((tool, index) => (
-              <div key={index} className="bg-white/5 border border-white/10 p-6 rounded-2xl backdrop-blur-md hover:bg-white/10 transition-all">
+              <div key={index} className="bg-white/5 border border-white/10 p-6 rounded-2xl backdrop-blur-md">
                 <p className="text-lg font-black uppercase tracking-widest opacity-80">{tool}</p>
               </div>
             ))}
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {[
-              { t: "Portfolio", i: <LayoutDashboard /> },
-              { t: "E-Commerce", i: <ShoppingCart /> },
-              { t: "Auth Systems", i: <ShieldCheck /> },
-              { t: "CMS Architecture", i: <FileText /> }
-            ].map((p, i) => (
-              <div key={i} className="bg-gradient-to-b from-white/10 to-transparent p-10 rounded-[3rem] border border-white/10 text-left hover:border-[#471088]/40 transition-all group">
-                <div className="w-14 h-14 rounded-2xl bg-[#471088] flex items-center justify-center mb-8 shadow-xl group-hover:scale-110 transition-transform">{p.i}</div>
-                <h4 className="text-xl font-black mb-3">{p.t} Architecture</h4>
-                <p className="text-gray-400 text-sm leading-relaxed">Engineered for production scale, utilizing modern best practices in clean architecture.</p>
+            {["Portfolio", "E-Commerce", "Auth Systems", "CMS Engine"].map((t, i) => (
+              <div key={i} className="bg-white/5 p-10 rounded-[3rem] border border-white/10 text-left hover:border-[#471088]/40 transition-all group">
+                <div className="w-14 h-14 rounded-2xl bg-[#471088] flex items-center justify-center mb-8 shadow-xl">
+                   <FileText className="w-6 h-6" />
+                </div>
+                <h4 className="text-xl font-black mb-3">{t} Architecture</h4>
+                <p className="text-gray-400 text-sm leading-relaxed">Engineered for production scale using modern clean architecture.</p>
               </div>
             ))}
           </div>
@@ -298,14 +231,18 @@ export default function ProgramPage() {
       </section>
 
       {/* ─── FINAL CTA ─── */}
-      <section className="relative py-32 bg-white overflow-hidden">
-        <div className="max-w-[1500px] mx-auto px-6 lg:px-16 relative z-10">
+      <section className="relative py-32 bg-white">
+        <div className="max-w-[1500px] mx-auto px-6 lg:px-16">
           <div className="bg-gradient-to-br from-[#471088] to-[#1c0b3b] p-12 lg:p-24 rounded-[4rem] text-center text-white shadow-2xl relative overflow-hidden">
             <Flame className="absolute -top-10 -left-10 w-40 h-40 opacity-10 rotate-12" />
-            <h2 className="text-4xl sm:text-7xl font-black mb-10 tracking-tighter leading-tight">Master <span className="italic opacity-80">{program.title}</span> <br/> in 2026</h2>
+            <h2 className="text-4xl sm:text-7xl font-black mb-10 tracking-tighter leading-tight">Begin your <br/> <span className="italic opacity-80">{program.title}</span> mastery</h2>
             <div className="flex flex-col sm:flex-row justify-center gap-6 mt-12">
-               <button onClick={handleEnroll} className="px-12 py-6 bg-white text-[#471088] font-black rounded-2xl text-lg uppercase tracking-widest shadow-2xl hover:scale-105 transition-all">Start Learning Now</button>
-               <button onClick={() => navigate("/contact")} className="px-12 py-6 border-2 border-white/20 text-white font-black rounded-2xl text-lg uppercase tracking-widest hover:bg-white/10 transition-all">Talk to Mentor</button>
+               <button onClick={handleEnroll} className="px-12 py-6 bg-white text-[#471088] font-black rounded-2xl text-lg uppercase tracking-widest shadow-2xl hover:scale-105 transition-all">
+                  Start Path Now
+               </button>
+               <button onClick={() => navigate("/contact")} className="px-12 py-6 border-2 border-white/20 text-white font-black rounded-2xl text-lg uppercase tracking-widest hover:bg-white/10 transition-all">
+                  Consult Mentor
+               </button>
             </div>
           </div>
         </div>
