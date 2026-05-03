@@ -13,6 +13,7 @@ class Enrollment(Base):
     # Foreign keys — links to users and programs tables
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     program_id = Column(Integer, ForeignKey("programs.id"), nullable=False)
+    
 
     # Enrollment details
     status = Column(String(50), default="active")       # active, completed, dropped

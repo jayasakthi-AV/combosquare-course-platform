@@ -65,15 +65,12 @@ export default function PaymentPage() {
       openRazorpayCheckout(
         order,
         user,
-        () => {
-          console.log("PAYMENT SUCCESS");
-      
-          console.log("COURSE 👉", course);
-      
-          navigate(`/learn/${course.slug || "full-stack-1"}`);// ✅ FINAL FIX
+        (result) => {
+          // Use slug from verify response, fallback to course.slug
+          const slug = result?.slug || course.slug;
+          navigate(`/learn/${slug}`);
         },
         (err) => {
-          console.log("RAZORPAY ERROR 👉", err);
           setError(err?.message || 'Payment failed. Please try again.');
           setPaying(false);
         }

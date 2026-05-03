@@ -7,3 +7,4 @@ class Module(Base):
     id = Column(Integer, primary_key=True)
     title = Column(String)
     course_id = Column(Integer, ForeignKey("programs.id"))
+    order = Column(Integer, default=0)

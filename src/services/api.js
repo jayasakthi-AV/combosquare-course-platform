@@ -12,11 +12,10 @@ const api = axios.create({
 });
 
 // Add token to all requests automatically
+// services/api.js — make sure interceptor adds token
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('access_token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
+  const token = localStorage.getItem("token");
+  if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
 

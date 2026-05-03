@@ -66,7 +66,7 @@ export default function ProgramPage() {
     if (isEnrolled) {
       navigate(`/learn/${programId}`);
     } else {
-      navigate(`/pay/${programId}`);
+      navigate(`/pay/${programId}`);  
     }
   };
 

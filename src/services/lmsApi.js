@@ -37,16 +37,15 @@ export const submitQuiz = (quizId, answers) =>
 
 // ── Payment ─────────────────────────────────────────────────────
 export const createPaymentOrder = async (courseId) => {
+  const token = localStorage.getItem("token");  // ← ADD THIS
   const res = await fetch("http://localhost:8001/api/payment/create-order", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}`,        // ← ADD THIS
     },
-    body: JSON.stringify({
-      course_id: Number(courseId),
-    }),
+    body: JSON.stringify({ course_id: Number(courseId) }),
   });
-
   return await res.json();
 };
 
@@ -96,13 +95,13 @@ export const openRazorpayCheckout = (order, user, onSuccess, onFailure) => {
     theme: { color: '#7C3AED' },
     handler: async (response) => {
       try {
-        await verifyPayment({
-          program_id: order.program_id,   // 🔥 ADD THIS LINE
-          razorpay_order_id: response.razorpay_order_id,
-          razorpay_payment_id: response.razorpay_payment_id,
-          razorpay_signature: response.razorpay_signature,
+        const result = await verifyPayment({
+          program_id          : order.program_id,
+          razorpay_order_id   : response.razorpay_order_id,
+          razorpay_payment_id : response.razorpay_payment_id,
+          razorpay_signature  : response.razorpay_signature,
         });
-        onSuccess(response);
+        onSuccess(result);   // passes {status, slug} to PaymentPage
       } catch (err) {
         onFailure(err);
       }

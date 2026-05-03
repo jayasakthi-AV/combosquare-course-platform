@@ -55,13 +55,13 @@ def get_student_dashboard(
     # Calculate stats
     total_enrolled = len(enrollments)
     completed = len([e for e in enrollments if e.status == "completed"])
-    in_progress = len([e for e in enrollments if e.status == "active" and e.progress > 0])
+    in_progress = len([e for e in enrollments if e.status == "active" and (e.progress or 0) > 0])
     not_started = len([e for e in enrollments if e.progress == 0])
 
     # Average progress across all enrollments
     avg_progress = 0.0
     if total_enrolled > 0:
-        avg_progress = sum(e.progress for e in enrollments) / total_enrolled
+        avg_progress = sum((e.progress or 0) for e in enrollments) / total_enrolled
 
     return {
         "profile": {
